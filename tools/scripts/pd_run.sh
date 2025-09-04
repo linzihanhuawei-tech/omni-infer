@@ -400,6 +400,11 @@ echo "=================="
 # Execute Python script
 
 common_operations() {
+  local mtp_args=""
+  if [ "$NUM_SPECULATIVE_TOKENS" -ne 0 ]; then
+    mtp_args="--enable-mtp --num-speculative-tokens $NUM_SPECULATIVE_TOKENS"
+  fi
+
   python start_api_servers.py \
     --num-servers "$NUM_SERVERS" \
     --num-dp "$NUM_DP" \
@@ -415,8 +420,7 @@ common_operations() {
     --kv-transfer-config "$KV_TRANSFER_CONFIG" \
     --gpu-util "$GPU_UTIL" \
     --additional-config "$ADDITIONAL_CONFIG" \
-    --enable-mtp \
-    --num-speculative-tokens "$NUM_SPECULATIVE_TOKENS" \
+    $mtp_args \
     --extra-args "$EXTRA_ARGS"
 }
 
