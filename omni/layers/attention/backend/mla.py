@@ -552,8 +552,10 @@ class AscendMLAMetadataBuilder(DummyAttentionMetadataBuilder):
                                             )
                     # 在sp场景下，只有切分后长度的位置信息
                     cos_q, sin_q = self.runner.model.model.layers[0].self_attn.rotary_emb.get_cos_sin(positions)
-                else:
+                else if not isinstance(self.runner.model.model.layers[0].self_attn, torch.nn.ModuleList):
                     cos, sin = self.runner.model.model.layers[0].self_attn.rotary_emb.get_cos_sin(tmp_input_position)
+                else:
+                    cos, sin = None, None
 
             else:
                 seq_qlen_group = [list(itertools.accumulate(query_lens_list))]
