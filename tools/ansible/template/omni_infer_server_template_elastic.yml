@@ -27,7 +27,7 @@
     MODEL_LEN_MAX_DECODE: "16384"
     LOG_PATH_IN_EXECUTOR: "/data/log_path_in_executor"
     CODE_PATH: "/data/local_code_path"
-    KV_CONNECTOR: "AscendHcclConnectorV1"
+    KV_CONNECTOR: "LMCacheConnectorV1"
 
     # Configuration for containers
     DOCKER_IMAGE_ID: "REPOSITORY:TAG"
