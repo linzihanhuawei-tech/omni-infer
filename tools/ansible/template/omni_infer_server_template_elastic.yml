@@ -98,7 +98,7 @@
       
       export MOONCAKE_CONFIG_PATH=$MOONCAKE_CONFIG_PATH
       export LMCACHE_CONFIG_FILE=$LMCACHE_MOONCAKE_CONFIG_PATH
-      kv_role="kv_both"
+      kv_role="kv_producer"
 
       bash /workspace/omniinfer/tools/scripts/pd_run.sh \
         --local-decode-server-ip-list "$SERVER_IP_LIST" \
@@ -1414,7 +1414,6 @@
       tags:
         - run_proxy
         - run_server
-        - add_node
         - delete_node
 
     - name: Kill all Python processes in the container of proxy.
@@ -1427,7 +1426,6 @@
       tags: 
         - run_proxy
         - run_server
-        - add_node
         - delete_node
 
     - name: Generate a script to run the global proxy server.
@@ -1439,7 +1437,6 @@
       tags:
         - run_proxy
         - run_server
-        - add_node
         - delete_node
 
     - name: Run the global proxy server.
@@ -1450,7 +1447,6 @@
       tags:
         - run_proxy
         - run_server
-        - add_node
         - delete_node
 
     - name: Delete Prefill/Decode instances.
