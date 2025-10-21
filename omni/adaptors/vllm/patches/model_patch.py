@@ -68,7 +68,7 @@ def patch_all():
     patch_linear()
     patch_shm_to_zmq()
     patch_thinking_bug_fix()
-    patch_enable_max_token_exclude_reasoning
+    patch_enable_max_token_exclude_reasoning()
     _patch_done = True
 
 patch_all() 
