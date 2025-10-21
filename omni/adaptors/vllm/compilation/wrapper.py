@@ -13,6 +13,7 @@ from vllm.utils import supports_dynamo
 from omni.adaptors.vllm.compilation.compile_config import get_torchair_config
 
 logger = init_logger(__name__)
+torch._dynamo.config.inline_inbuilt_nn_modules=False
 
 
 class TorchNpuCompilerWrapperWithCustomDispatcher:
