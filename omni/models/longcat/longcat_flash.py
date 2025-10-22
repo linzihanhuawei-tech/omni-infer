@@ -50,8 +50,6 @@ from vllm.model_executor.models.utils import (
     make_empty_intermediate_tensors_factory,
 )
 from vllm.model_executor.model_loader.weight_utils import default_weight_loader
-from omni.models.common.layers.attention.deepseek_mla import DeepseekMLA
-from omni.models.common.layers.rotary_embedding import RotaryEmbedding2
 
 from omni.models.common.layers.vocab_parallel_embedding import (
     ParallelLMHead, 
