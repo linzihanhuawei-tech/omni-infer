@@ -534,6 +534,10 @@ class AscendMLAMetadataBuilder(DummyAttentionMetadataBuilder):
                 seq_qlen_group = [list(itertools.accumulate(sub_list)) for sub_list in seq_qlen_group]
                 seq_kvlen_group = [list(itertools.accumulate(sub_list)) for sub_list in seq_kvlen_group]
                 tmp_input_position = input_positions[tokens_start:]
+                if isinstance(self.runner.model.model.layers[0].self_attn, torch.nn.ModuleList):
+                    cos, sin = self.runner.model.model.layers[0].self_attn[0].rotary_emb.get_cos_sin(input_positions)
+                else:
+                    cos, sin = self.runner.model.model.layers[0].self_attn.rotary_emb.get_cos_sin(input_positions)
                 if not model_extra_config.operator_opt_config.enable_dsa:
                     query_lens = query_lens_list[reqs_start:]
                     seq_lens = seq_lens_list
@@ -552,11 +556,6 @@ class AscendMLAMetadataBuilder(DummyAttentionMetadataBuilder):
                                             )
                     # 在sp场景下，只有切分后长度的位置信息
                     cos_q, sin_q = self.runner.model.model.layers[0].self_attn.rotary_emb.get_cos_sin(positions)
-                else:
-                    if not isinstance(self.runner.model.model.layers[0].self_attn, torch.nn.ModuleList):
-                        cos, sin = self.runner.model.model.layers[0].self_attn.rotary_emb.get_cos_sin(tmp_input_position)
-                    else:
-                        cos, sin = None, None
 
             else:
                 seq_qlen_group = [list(itertools.accumulate(query_lens_list))]
@@ -614,7 +613,10 @@ class AscendMLAMetadataBuilder(DummyAttentionMetadataBuilder):
                     self._num_decode_tokens, block_table)
 
                 self.generate_activate_mask(num_actual_tokens, num_actual_tokens + graph_pad_size)
-                cos, sin = self.runner.model.model.layers[0].self_attn.rotary_emb.get_cos_sin(input_positions)
+                if isinstance(self.runner.model.model.layers[0].self_attn, torch.nn.ModuleList):
+                    cos, sin = self.runner.model.model.layers[0].self_attn[0].rotary_emb.get_cos_sin(input_positions)
+                else:
+                    cos, sin = self.runner.model.model.layers[0].self_attn.rotary_emb.get_cos_sin(input_positions)
                 best_topk = None
                 if model_extra_config.operator_opt_config.best_ep:
                     best_topk = self.cal_best_topk(num_actual_tokens + graph_pad_size)
