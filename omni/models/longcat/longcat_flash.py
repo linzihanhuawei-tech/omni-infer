@@ -51,13 +51,13 @@ from vllm.model_executor.models.utils import (
 )
 from vllm.model_executor.model_loader.weight_utils import default_weight_loader
 
-from omni.models.common.layers.vocab_parallel_embedding import (
+from omni.layers.vocab_parallel_embedding import (
     ParallelLMHead, 
     VocabParallelEmbedding
 )
-from omni.models.common.layers.layernorm import RMSNorm
+from omni.layers.layernorm import RMSNorm
 
-from omni.models.common.layers.moe.fused_moe.layer import FusedMoE
+from omni.layers.moe.fused_moe.layer import FusedMoE
 from omni.models.common.config.model_config import model_extra_config
 from omni.models.longcat.longcat_moe import LongcatFlashMoE
 from omni.models.longcat.longcat_mla import LongcatFlashMLA
