@@ -54,7 +54,7 @@ ROPE_ROTARY_FACTOR = 64
 
 NEOX_ROTARY_COEFF = 2
 
-class RotaryEmbedding2(nn.Module):
+class LongcatRotaryEmbedding(nn.Module):
     """Original rotary positional embedding."""
 
     def __init__(
@@ -102,6 +102,12 @@ class RotaryEmbedding2(nn.Module):
         freqs = torch.einsum("i,j -> ij", t, inv_freq)
         cos = freqs.cos()
         sin = freqs.sin()
+        if self.is_neox_style:
+            cos = cos.repeat(1, 2)
+            sin = sin.repeat(1, 2)
+        else:
+            cos = cos.repeat_interleave(2, dim=-1)
+            sin = sin.repeat_interleave(2, dim=-1)
         cache = torch.cat((cos, sin), dim=-1)
         return cache
 
@@ -114,9 +120,11 @@ class RotaryEmbedding2(nn.Module):
         if offsets is not None:
             positions = positions + offsets
         positions = positions.flatten()
-        num_tokens = positions.shape[0]
         cos_sin = self.cos_sin_cache.index_select(0, positions)
         cos, sin = cos_sin.chunk(2, dim=-1)
+        cos = cos.view(-1, 1, 1, cos.shape[-1])
+        sin = sin.view(-1, 1, 1, sin.shape[-1])
+
         return cos, sin
 
     def forward(self, positions, x, offsets=None):
