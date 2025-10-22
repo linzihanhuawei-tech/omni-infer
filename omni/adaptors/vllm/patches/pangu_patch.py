@@ -19,7 +19,7 @@ def patch_pangu():
             # underlying architecture
             return self.hf_text_config.model.model_type in \
                 ('deepseek_v2', 'deepseek_v3', 'deepseek_v32', 'pangu_ultra_moe', 'longcat_flash') \
-                    and kv_lora_dim is not None
+                and kv_lora_dim is not None
         return False
 
     def _verify_with_expert_parallelism(self) -> None:
