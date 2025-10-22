@@ -30,7 +30,7 @@ from vllm.platforms import current_platform
 from contextlib import nullcontext
 
 from omni.models.common.config.model_config import model_extra_config
-from omni.models.common.layers.rotary_embedding import RotaryEmbedding2
+from omni.models.common.layers.rotary_embedding import LongcatRotaryEmbedding
 from omni.models.common.layers.linear import (
     MergedReplicatedLinear,
     RowParallelLinearWithReduceScatter,
@@ -50,94 +50,6 @@ from omni.adaptors.vllm.distributed.parallel_state import (
 )
 
 KVCACHE_NZ_DIM = 16
-
-import inspect
-def check_stack_for_word(word: str) -> bool:
-    current_stack = inspect.stack()
-
-    # The first frame (index 0) is check_stack_for_word itself.
-    # We iterate from the immediate caller (index 1) upwards.
-    # We use enumerate to track the index so we can skip the code_context
-    # of the immediate caller to avoid the false positive you identified.
-    for i, frame_info in enumerate(current_stack):
-        # Skip our own frame (index 0)
-        if i == 0:
-            continue
-            
-        function_name = frame_info.function
-        filename = frame_info.filename
-        # Check if the word is in the function name
-        if word in function_name:
-            # print(f"Found '{word}' in function name: '{function_name}'")
-            return True
-            
-        if i > 1 and frame_info.code_context:
-            for line in frame_info.code_context:
-                if word in line:
-                    # print(f"Found '{word}' in code context: '{line.strip()}'")
-                    return True
-
-    # print(f"'{word}' was not found in the stack trace.")
-    return False
-
-def _dump(tensor: torch.Tensor, name: str, is_dump: bool):
-    """Save a tensor to disk only if debugging is on."""
-    if is_dump:
-        from pathlib import Path
-        import os
-        rank = get_tensor_model_parallel_rank()
-        debug_root = Path("/data/p00603624/debug_tensors")
-
-        #  Ensure the directory exists (creates parents if needed)
-        # `parents=True` = create any missing parent dirs (e.g. "./debug_tensors")
-        # `exist_ok=True` = don’t raise an exception if it already exists
-        debug_root.mkdir(parents=True, exist_ok=True)
-        cpu_tensor = tensor.cpu()
-        file_path = debug_root / f"rank_{rank}_{name}.pt"
-        torch.save(cpu_tensor, file_path)
-
-        if torch.is_floating_point(cpu_tensor):
-            mean_val = cpu_tensor.mean().item()
-            std_val  = cpu_tensor.std().item()
-        else:
-            mean_val = std_val = None
-        print(
-            f"[DEBUG] saved {name}: "
-            f"path={file_path}, shape={cpu_tensor.shape}, "
-        )
-
-def _dump0(tensor: torch.Tensor, name: str, is_dump: bool):
-    """Save a tensor to disk only if debugging is on."""
-    if is_dump:
-        from pathlib import Path
-        import os
-        rank = get_tensor_model_parallel_rank()
-        if rank != 0:
-            return
-        debug_root = Path("/data/p00603624/debug_tensors")
-
-        #  Ensure the directory exists (creates parents if needed)
-        # `parents=True` = create any missing parent dirs (e.g. "./debug_tensors")
-        # `exist_ok=True` = don’t raise an exception if it already exists
-        debug_root.mkdir(parents=True, exist_ok=True)
-        cpu_tensor = tensor.cpu()
-        file_path = debug_root / f"rank_{rank}_{name}.pt"
-        torch.save(cpu_tensor, file_path)
-
-        if torch.is_floating_point(cpu_tensor):
-            mean_val = cpu_tensor.mean().item()
-            std_val  = cpu_tensor.std().item()
-        else:
-            mean_val = std_val = None
-        print(
-            f"[DEBUG] saved {name}: "
-            f"path={file_path}, shape={cpu_tensor.shape}, "
-        )
-
-def get_layer_id_from_prefix(prefix: str):
-    import re
-    match = re.search(r'\d+', prefix)
-    return int(match.group())
 
 def yarn_get_mscale(scale: float = 1, mscale: float = 1) -> float:
     import math
@@ -278,7 +190,7 @@ class LongcatFlashMLA(nn.Module):
                                                             quant_config=quant_config,
                                                             prefix=f"{prefix}.o_proj")
         assert rope_scaling is None
-        self.rotary_emb = RotaryEmbedding2(
+        self.rotary_emb = LongcatRotaryEmbedding(
             head_size=qk_rope_head_dim,
             rotary_dim=qk_rope_head_dim,
             max_position_embeddings=max_position_embeddings,
@@ -370,7 +282,6 @@ class LongcatFlashMLA(nn.Module):
         attn_metadata: AttentionMetadata,
         comm_group: Optional[GroupCoordinator] = None,
     ) -> torch.Tensor:
-        is_dummy = check_stack_for_word("dummy")
         if isinstance(attn_metadata, Dict):
             attn_metadata = attn_metadata[f"{self.prefix}.attn"]
         if not self.is_scale_norm:
@@ -442,6 +353,7 @@ class LongcatFlashMLA(nn.Module):
                 else:
                     q = mla_tensor_model_parallel_all_gather(q, dim=0, comm_group=comm_group)
                 q = self.q_b_proj(q)[0].view(-1, self.num_local_heads, self.qk_head_dim)
+
         else:
             q = self.q_proj(hidden_states)[0].view(-1, self.num_local_heads, self.qk_head_dim)
             latent_cache = self.kv_a_proj_with_mqa(hidden_states)[0]
@@ -569,6 +481,7 @@ class LongcatFlashMLA(nn.Module):
 
         # if only set prefill_enable_mla_alltoall means prefill o_proj tp to dp
         # if also set o_proj_tp_size means prefill o_proj tp to dp + tp
+        
         if model_extra_config.operator_opt_config.prefill_enable_mla_alltoall:
             if attn_metadata is not None:
                 if model_extra_config.parall_config.o_proj_tp_size > 1:
@@ -598,6 +511,7 @@ class LongcatFlashMLA(nn.Module):
                 attn_output.reshape(-1, o_proj_tp_size * self.num_local_heads * self.v_head_dim))
         else:
             attn_output = attn_output.view(-1, self.num_local_heads * self.v_head_dim)
+            # _dump0(attn_output, "prefill_attn_output", layer, is_dummy)
             if model_extra_config.parall_config.o_proj_tp_size > 1:
                 output, _ = self.o_proj.forward(attn_output, q.shape[0], 1, self.num_local_heads, self.v_head_dim)
             else:
@@ -655,7 +569,6 @@ class LongcatFlashMLA(nn.Module):
                     q_lowrank = self.q_a_proj(hidden_states)[0]
                 else:
                     q_lowrank = self.q_proj(hidden_states)[0]
-
                 if model_extra_config.operator_opt_config.moe_multi_stream_tune:
                     with tng.scope.npu_stream_switch('11'):
                         kv = self.kv_a_proj_with_mqa(hidden_states)[0]
@@ -672,7 +585,6 @@ class LongcatFlashMLA(nn.Module):
                 bsz, _ = q.shape
                 q = q.view(bsz, self.num_local_heads, 1, self.qk_head_dim)
                 q_nope, q_pe = torch.split(q, [self.qk_nope_head_dim, self.qk_rope_head_dim], dim=-1) # b,n,s,d
-
                 q_nope = q_nope.view(-1, self.num_local_heads, self.qk_nope_head_dim).transpose(0, 1) # n, bs, d
                 q_nope = (
                     torch.matmul(q_nope, self.W_UK)
@@ -744,8 +656,8 @@ class LongcatFlashMLA(nn.Module):
                         )
 
             # Apply UV, (N, B, L) @ W_UV (N, L, V) -> (N, B, V)
+            
             attn_output = attn_output.view(self.num_local_heads, bsz*q_len, self.kv_lora_rank) # adapter BSND_NBSD
-
             attn_output = (
                 torch.matmul(attn_output, self.W_UV)
                 .transpose(1, 0)
@@ -753,7 +665,6 @@ class LongcatFlashMLA(nn.Module):
             )
             attn_output = attn_output.view(
                 -1, self.num_local_heads * self.v_head_dim)
-            
             if model_extra_config.parall_config.o_proj_tp_size > 1:
                 output, _ = self.o_proj.forward(attn_output, bsz, q_len, self.num_local_heads, self.v_head_dim)
             else:
