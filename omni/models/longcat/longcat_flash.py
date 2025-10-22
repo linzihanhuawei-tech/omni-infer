@@ -39,17 +39,7 @@ from vllm.model_executor.layers.sampler import Sampler, SamplerOutput
 from vllm.distributed import (
     get_pp_group,
     get_tensor_model_parallel_world_size,
-    get_tensor_model_parallel_rank,
     tensor_model_parallel_all_gather
-)
-from omni.adaptors.vllm.distributed.parallel_state import (
-    get_mlp_tp_group,
-    get_o_proj_tp_group,
-    GroupCoordinator
-)
-
-from vllm.distributed.parallel_state import (
-    get_tp_group
 )
 
 from vllm.model_executor.layers.logits_processor import LogitsProcessor
@@ -73,7 +63,6 @@ from omni.models.common.layers.moe.fused_moe.layer import FusedMoE
 from omni.models.common.config.model_config import model_extra_config
 from omni.models.longcat.longcat_moe import LongcatFlashMoE
 from omni.models.longcat.longcat_mla import LongcatFlashMLA
-from omni.models.common.layers.fused_mlp.layer import FusedMLP
 from omni.models.deepseek.deepseek_v3 import ParallelDeepseekMLP
 if model_extra_config.operator_opt_config.unquant_bmm_nz:
     # if use weight nz, this config must be True
@@ -81,96 +70,6 @@ if model_extra_config.operator_opt_config.unquant_bmm_nz:
 
 """MLP module activation split length, split by 64G VRAM, need to confirm the optimal split length based on sequence length and performance"""
 SEQ_SPLIT_LENGTH_BEFORE_ALL_GATHER = 64
-
-
-def rank0_log(msg):
-    if get_tensor_model_parallel_rank() == 0:
-        print(msg)
-import inspect
-def check_stack_for_word(word: str) -> bool:
-    current_stack = inspect.stack()
-
-    # The first frame (index 0) is check_stack_for_word itself.
-    # We iterate from the immediate caller (index 1) upwards.
-    # We use enumerate to track the index so we can skip the code_context
-    # of the immediate caller to avoid the false positive you identified.
-    for i, frame_info in enumerate(current_stack):
-        # Skip our own frame (index 0)
-        if i == 0:
-            continue
-            
-        function_name = frame_info.function
-        filename = frame_info.filename
-        # Check if the word is in the function name
-        if word in function_name:
-            # print(f"Found '{word}' in function name: '{function_name}'")
-            return True
-            
-        if i > 1 and frame_info.code_context:
-            for line in frame_info.code_context:
-                if word in line:
-                    # print(f"Found '{word}' in code context: '{line.strip()}'")
-                    return True
-
-    # print(f"'{word}' was not found in the stack trace.")
-    return False
-
-def _dump(tensor: torch.Tensor, name: str, layer: int, warm_up: bool):
-    """Save a tensor to disk only if debugging is on."""
-    from pathlib import Path
-    import os
-    
-    rank = get_tensor_model_parallel_rank()
-    if layer == 0 and not warm_up:
-        debug_root = Path("/data/p00603624/debug_tensors")
-
-        #  Ensure the directory exists (creates parents if needed)
-        # `parents=True` = create any missing parent dirs (e.g. "./debug_tensors")
-        # `exist_ok=True` = don’t raise an exception if it already exists
-        debug_root.mkdir(parents=True, exist_ok=True)
-        cpu_tensor = tensor.cpu()
-        file_path = debug_root / f"rank_{rank}_{name}.pt"
-        torch.save(cpu_tensor, file_path)
-
-        if torch.is_floating_point(cpu_tensor):
-            mean_val = cpu_tensor.mean().item()
-            std_val  = cpu_tensor.std().item()
-        else:
-            mean_val = std_val = None
-        print(
-            f"[DEBUG] saved {name}: "
-            f"path={file_path}, shape={cpu_tensor.shape}, "
-            f"mean={mean_val if mean_val is not None else 'N/A'}, "
-            f"std={std_val if std_val is not None else 'N/A'}"
-        )
-
-def _dump0(tensor: torch.Tensor, name: str, layer: int, warm_up: bool):
-    """Save a tensor to disk only if debugging is on."""
-    from pathlib import Path
-    import os
-
-    if layer == 0 and not warm_up and get_tensor_model_parallel_rank() == 0:
-        debug_root = Path("/data/p00603624/debug_tensors")
-
-        #  Ensure the directory exists (creates parents if needed)
-        # `parents=True` = create any missing parent dirs (e.g. "./debug_tensors")
-        # `exist_ok=True` = don’t raise an exception if it already exists
-        debug_root.mkdir(parents=True, exist_ok=True)
-        cpu_tensor = tensor.cpu()
-        file_path = debug_root / f"{name}.pt"
-        torch.save(cpu_tensor, file_path)
-
-        if torch.is_floating_point(cpu_tensor):
-            mean_val = cpu_tensor.mean().item()
-            std_val  = cpu_tensor.std().item()
-        else:
-            mean_val = std_val = None
-        print(
-            f"[DEBUG] saved {name}: "
-            f"path={file_path}, shape={cpu_tensor.shape}, "
-            f"mean={mean_val if mean_val is not None else 'N/A'}, "
-            f"std={std_val if std_val is not None else 'N/A'}"
-        )
 
 class LongcatFlashMLP(ParallelDeepseekMLP):
     pass
@@ -244,14 +143,11 @@ class LongcatFlashDecoderLayer(nn.Module):
             self,
             positions: torch.Tensor,
             hidden_states: torch.Tensor,
-            kv_cache: torch.Tensor,
+            kv_cache: list[torch.Tensor],
             attn_metadata: AttentionMetadata,
             residual: Optional[torch.Tensor],
             layer_id: Optional[int] = None,
     ) -> torch.Tensor:
-        import traceback
-        is_dummy_run = check_stack_for_word("dummy")
-        # _dump(hidden_states, f"layer{layer_id}_input_hs", layer_id, is_dummy_run)
         if isinstance(attn_metadata, dict):
             attn_metadata = attn_metadata[self.layer_name]
         # Self Attention
@@ -267,56 +163,43 @@ class LongcatFlashDecoderLayer(nn.Module):
         hidden_states = self.self_attn[0](
             positions=positions,
             hidden_states=hidden_states,
-            kv_cache=kv_cache,
+            kv_cache=kv_cache[0] if kv_cache is not None else None,
             attn_metadata=attn_metadata,
         )
-        # _dump(hidden_states, f"layer{layer_id}_self_attn0_out", layer_id, is_dummy_run)
         hidden_states, residual = self.post_attention_layernorm[0](hidden_states, residual)
-        # _dump(hidden_states, f"layer{layer_id}_post_ln0_out", layer_id, is_dummy_run)       # 已对齐
-        # _dump0(residual,    f"layer{layer_id}_post_ln0_residual", layer_id, is_dummy_run)    # 已对齐
+
         moe_hidden_states = hidden_states.clone()
 
-        # _dump(moe_hidden_states, f"layer{layer_id}_moe_input", layer_id, is_dummy_run)
         moe_hidden_states = self.mlp(moe_hidden_states, attn_metadata)
         if isinstance(moe_hidden_states, (tuple, list)):
             assert len(moe_hidden_states) == 2
             # 0 is the shared expert hidden_states, 1 is the routing expert hidden_states, add operation cannot be placed in the super kernel
             moe_hidden_states = moe_hidden_states[0] + moe_hidden_states[1]
-        # _dump(moe_hidden_states, f"layer{layer_id}_moe_output", layer_id, is_dummy_run)
 
         hidden_states, residual = self.mlps[0](hidden_states, residual, attn_metadata)
-        # _dump0(hidden_states, f"layer{layer_id}_mlp0_out", layer_id, is_dummy_run)
 
         if residual is None:
             residual = hidden_states
             hidden_states = self.input_layernorm[1](hidden_states)
-            # _dump0(hidden_states, f"layer{layer_id}_ln1_output", layer_id, is_dummy_run)
         else:
             # Adapt: adapt for w8a8 dynamic, do quant
             # Combines residual add and rmsnorm
             hidden_states, residual = self.input_layernorm[1](
                 hidden_states, residual, quant_symbol=(not model_extra_config.operator_opt_config.use_mlaprolog and self.quant_symbol))
-            # _dump0(hidden_states, f"layer{layer_id}_ln1_output", layer_id, is_dummy_run)
-            # _dump0(residual,    f"layer{layer_id}_ln1_residual", layer_id, is_dummy_run)
         
         assert hidden_states.shape[0] > 0
         hidden_states = self.self_attn[1](
             positions=positions,
             hidden_states=hidden_states,
-            kv_cache=kv_cache,
+            kv_cache=kv_cache[1] if kv_cache is not None else None,
             attn_metadata=attn_metadata,
         )
-        # _dump0(hidden_states, f"layer{layer_id}_self_attn1_out", layer_id, is_dummy_run)
 
         hidden_states, residual = self.post_attention_layernorm[1](hidden_states, residual)
-        # _dump0(hidden_states, f"layer{layer_id}_post_ln1_out", layer_id, is_dummy_run)
-        # _dump0(residual,    f"layer{layer_id}_post_ln1_residual", layer_id, is_dummy_run)
 
         hidden_states, residual = self.mlps[1](hidden_states, residual, attn_metadata)
-        # _dump0(hidden_states, f"layer{layer_id}_mlp1_out", layer_id, is_dummy_run)
-
+ 
         hidden_states = moe_hidden_states + hidden_states
-        # _dump0(hidden_states, f"layer{layer_id}_final_output", layer_id, is_dummy_run)
 
         return hidden_states, residual
 
@@ -373,12 +256,9 @@ class LongcatFlashModel(nn.Module):
             attn_metadata: AttentionMetadata,
             intermediate_tensors: Optional[IntermediateTensors],
     ) -> Union[torch.Tensor, IntermediateTensors]:
-        is_dummy_run = check_stack_for_word("dummy")
         if get_pp_group().is_first_rank:
             hidden_states = self.get_input_embeddings(input_ids)
             residual = None
-            # _dump(input_ids, f"input_ids", 0, is_dummy_run)
-            # _dump(hidden_states, f"input_embedding", 0, is_dummy_run)
         else:
             assert intermediate_tensors is not None
             hidden_states = intermediate_tensors["hidden_states"]
@@ -388,7 +268,7 @@ class LongcatFlashModel(nn.Module):
             layer = self.layers[i]
             hidden_states, residual = layer(positions,
                                             hidden_states,
-                                            kv_caches[i - self.start_layer] if kv_caches is not None else None,
+                                            kv_caches[(i - self.start_layer) * 2 : (i - self.start_layer + 1) * 2] if kv_caches is not None else None,
                                             attn_metadata,
                                             residual,
                                             i)
@@ -531,7 +411,7 @@ class LongcatFlashForCausalLM(nn.Module):
             total_count += 1
             # rank0_log(f"to load weight name = {name}, shape = {loaded_weight.shape}, dtype = {loaded_weight.dtype}")
             if "rotary_emb.inv_freq" in name:
-                rank0_log(f"[rotary_emb] failed to load weight name = {name}")
+                # rank0_log(f"[rotary_emb] failed to load weight name = {name}")
                 continue
 
             for (param_name, weight_name, shard_id) in stacked_params_mapping:
@@ -605,7 +485,7 @@ class LongcatFlashForCausalLM(nn.Module):
                     weight_loader(param, loaded_weight)
                     loaded_count += 1
             loaded_params.add(name)
-        rank0_log(f"load weight count = {loaded_count}, total_count = {total_count}")
+        # rank0_log(f"load weight count = {loaded_count}, total_count = {total_count}")
         return loaded_params
 
     def should_use_eager_mode(self, *args, **kwargs):
