@@ -53,97 +53,6 @@ def rank0_log(msg):
     if get_tensor_model_parallel_rank() == 0:
         print(msg)
 
-def get_layer_id_from_prefix(prefix: str):
-    import re
-    match = re.search(r'\d+', prefix)
-    return int(match.group())
-
-import inspect
-def check_stack_for_word(word: str) -> bool:
-    current_stack = inspect.stack()
-
-    # The first frame (index 0) is check_stack_for_word itself.
-    # We iterate from the immediate caller (index 1) upwards.
-    # We use enumerate to track the index so we can skip the code_context
-    # of the immediate caller to avoid the false positive you identified.
-    for i, frame_info in enumerate(current_stack):
-        # Skip our own frame (index 0)
-        if i == 0:
-            continue
-            
-        function_name = frame_info.function
-        filename = frame_info.filename
-        # Check if the word is in the function name
-        if word in function_name:
-            # print(f"Found '{word}' in function name: '{function_name}'")
-            return True
-            
-        if i > 1 and frame_info.code_context:
-            for line in frame_info.code_context:
-                if word in line:
-                    # print(f"Found '{word}' in code context: '{line.strip()}'")
-                    return True
-
-    # print(f"'{word}' was not found in the stack trace.")
-    return False
-
-def _dump(tensor: torch.Tensor, name: str, layer: int, warm_up: bool):
-    """Save a tensor to disk only if debugging is on."""
-    from pathlib import Path
-    import os
-
-    rank = get_tensor_model_parallel_rank()
-    if layer == 0 and not warm_up:
-        debug_root = Path("/data/p00603624/debug_tensors")
-
-        #  Ensure the directory exists (creates parents if needed)
-        # `parents=True` = create any missing parent dirs (e.g. "./debug_tensors")
-        # `exist_ok=True` = don’t raise an exception if it already exists
-        debug_root.mkdir(parents=True, exist_ok=True)
-        cpu_tensor = tensor.cpu()
-        file_path = debug_root / f"rank_{rank}_{name}.pt"
-        torch.save(cpu_tensor, file_path)
-
-        if torch.is_floating_point(cpu_tensor):
-            mean_val = cpu_tensor.mean().item()
-            std_val  = cpu_tensor.std().item()
-        else:
-            mean_val = std_val = None
-        print(
-            f"[DEBUG] saved {name}: "
-            f"path={file_path}, shape={cpu_tensor.shape}, "
-            f"mean={mean_val if mean_val is not None else 'N/A'}, "
-            f"std={std_val if std_val is not None else 'N/A'}"
-        )
-
-def _dump0(tensor: torch.Tensor, name: str, layer: int, warm_up: bool):
-    """Save a tensor to disk only if debugging is on."""
-    from pathlib import Path
-    import os
-
-    if layer == 0 and not warm_up and get_tensor_model_parallel_rank() == 0:
-        debug_root = Path("/data/p00603624/debug_tensors")
-
-        #  Ensure the directory exists (creates parents if needed)
-        # `parents=True` = create any missing parent dirs (e.g. "./debug_tensors")
-        # `exist_ok=True` = don’t raise an exception if it already exists
-        debug_root.mkdir(parents=True, exist_ok=True)
-        cpu_tensor = tensor.cpu()
-        file_path = debug_root / f"{name}.pt"
-        torch.save(cpu_tensor, file_path)
-
-        if torch.is_floating_point(cpu_tensor):
-            mean_val = cpu_tensor.mean().item()
-            std_val  = cpu_tensor.std().item()
-        else:
-            mean_val = std_val = None
-        print(
-            f"[DEBUG] saved {name}: "
-            f"path={file_path}, shape={cpu_tensor.shape}, "
-            f"mean={mean_val if mean_val is not None else 'N/A'}, "
-            f"std={std_val if std_val is not None else 'N/A'}"
-        )
-
 class LongcatFlashTopkRouter(nn.Module):
     def __init__(
         self, 
@@ -171,28 +80,14 @@ class LongcatFlashTopkRouter(nn.Module):
             torch.zeros((self.n_routed_experts), dtype=rounter_params_dtype)
         )
 
-    # @torch.no_grad()
-    # def get_topk_indices(self, scores):
-    #     scores_for_choice = scores.view(-1, self.n_routed_experts) + self.e_score_correction_bias.unsqueeze(0)
-    #     topk_indices = torch.topk(scores_for_choice, k=self.top_k, dim=-1, sorted=False)[1]
-    #     return topk_indices
-
-    # def forward(self, hidden_states):
-    #     hidden_states = hidden_states.view(-1, self.config.hidden_size)
-    #     router_logits, _ = self.classifier(hidden_states.type(torch.float32))
-    #     scores = router_logits.softmax(dim=-1)
-    #     topk_indices = self.get_topk_indices(scores)
-    #     topk_weights = scores.gather(1, topk_indices)
-    #     if self.norm_topk_prob:
-    #         denominator = topk_weights.sum(dim=-1, keepdim=True) + 1e-20
-    #         topk_weights /= denominator
-    #     topk_weights = topk_weights * self.routed_scaling_factor
-    #     return topk_indices, topk_weights
     def forward(self, hidden_states):
         return self.classifier(hidden_states)
-    
-    def get_topk_indices_original(self, router_logits):
-        # npu_moe_gating_top_k算子有问题，只支持256和384专家
+
+    def get_topk_indices(self, classify_score):
+        n_routed_experts = classify_score.shape[-1]
+        scores = classify_score.softmax(dim=-1)
+        scores_for_choice = scores.view(-1, n_routed_experts) + self.e_score_correction_bias.unsqueeze(0)
+        # TODO：npu_moe_gating_top_k算子有问题，只支持256和384专家。
         # return torch_npu.npu_moe_gating_top_k(
         #     router_logits.float(),
         #     k=self.top_k,  # topk is currently 8
@@ -205,24 +100,10 @@ class LongcatFlashTopkRouter(nn.Module):
         #     routed_scaling_factor=self.routed_scaling_factor,
         #     eps=float(1e-20)
         # )
-        router_logits = router_logits.view(-1, self.n_routed_experts) + self.e_score_correction_bias.unsqueeze(0)
-        topk_weights, topk_ids, row_idx = torch_npu.npu_moe_gating_top_k_softmax(router_logits, k=self.top_k)
-
-        topk_weights /= topk_weights.sum(dim=-1, keepdim=True)
-        topk_weights = topk_weights * self.routed_scaling_factor
-        return topk_weights, topk_ids, row_idx
-
-    def get_topk_indices(self, classify_score, layer):
-        is_dummy = check_stack_for_word("dummy")
-
-        n_routed_experts = classify_score.shape[-1]
-        scores = classify_score.softmax(dim=-1)
-        scores_for_choice = scores.view(-1, n_routed_experts) + self.e_score_correction_bias.unsqueeze(0) # 对齐
-        # _dump(scores_for_choice, "score_for_choice", layer, is_dummy)
-        topk_indices = torch.topk(scores_for_choice, k=self.top_k, dim=-1, sorted=False)[1] # 对齐
-        topk_weights = scores_for_choice.gather(1, topk_indices)
+        topk_indices = torch.topk(scores_for_choice, k=self.top_k, dim=-1, sorted=False)[1]
+        topk_weights = scores.gather(1, topk_indices)
         topk_weights = topk_weights.to(torch.float32) * self.routed_scaling_factor
-        return topk_weights.to(torch.float32), topk_indices.to(torch.int32)
+        return topk_weights, topk_indices.to(torch.int32)
 
 class LongcatFlashMoE(nn.Module):
 
@@ -293,9 +174,8 @@ class LongcatFlashMoE(nn.Module):
         normal_expert_mask = topk_ids < self.n_routed_experts
 
         zero_expert_weights = topk_weights.clone()
-        zero_expert_weights[normal_expert_mask] = 0
+        zero_expert_weights[normal_expert_mask] = 0.0
         total_weights = zero_expert_weights.sum(dim=-1, keepdim=True)   # [T, 1]
-        # zero_expert_output = hidden_states * total_weights
         zero_expert_output = hidden_states * total_weights              # [T, H]
         zero_expert_output = zero_expert_output.to(hidden_states.dtype)
         topk_ids[zero_expert_mask] = 0 # 都用0号专家替代
@@ -303,14 +183,8 @@ class LongcatFlashMoE(nn.Module):
         return zero_expert_output, topk_ids, topk_weights
 
     def _forward_prefill_norm(self, hidden_states: torch.Tensor, attn_metadata: AttentionMetadata) -> torch.Tensor:
-        # is_dummy = check_stack_for_word("dummy")
-        layer = get_layer_id_from_prefix(self.prefix)
-
         router_logits, _ = self.router.forward(hidden_states.float())
-        # _dump0(router_logits, "router_logits", layer, is_dummy)
-        topk_weights, topk_ids = self.router.get_topk_indices(router_logits, layer)
-        # _dump0(topk_ids, "topk_ids", layer, is_dummy)
-        # _dump0(topk_weights, "topk_weights", layer, is_dummy)
+        topk_weights, topk_ids = self.router.get_topk_indices(router_logits)
         zero_expert_output, topk_ids, topk_weights = self.compute_zero_experts(hidden_states, topk_weights, topk_ids)
         final_hidden_states = self.experts(
             hidden_states=hidden_states,
@@ -346,8 +220,7 @@ class LongcatFlashMoE(nn.Module):
 
     def _forward_decode_dispatch_combine(self, hidden_states: torch.Tensor, attn_metadata: AttentionMetadata) -> torch.Tensor:
         router_logits, _ = self.router.forward(hidden_states.float())
-        layer = get_layer_id_from_prefix(self.prefix)
-        topk_weights, topk_ids = self.router.get_topk_indices(router_logits, layer)
+        topk_weights, topk_ids = self.router.get_topk_indices(router_logits)
         zero_expert_output, topk_ids, topk_weights = self.compute_zero_experts(hidden_states, topk_weights, topk_ids)
 
         mc2_mask = attn_metadata.decode.mc2_mask if attn_metadata is not None and attn_metadata.decode is not None else None
