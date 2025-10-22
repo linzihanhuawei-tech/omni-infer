@@ -43,7 +43,7 @@ from vllm.model_executor.layers.linear import ReplicatedLinear
 
 from omni.models.longcat.longcat_fused_moe import FusedMoE
 from omni.models.common.config.model_config import model_extra_config
-from omni.adaptors.vllm.patches.model_patch import get_attr_by_names
+from omni.adaptors.vllm.utils import get_attr_by_names
 
 
 """NPU Stream Switch Names"""
