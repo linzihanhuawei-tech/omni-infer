@@ -55,16 +55,16 @@ class UnquantizedFusedMoEMethod(GPUUnquantizedFusedMoEMethod):
         hidden_states = x.view(-1, h)
         topk_weight = topk_weight.to(x.dtype)
         # TODO: 恢复warm_up
-        # if self.warm_up:
-        #     # This is forced balancing, the goal is to reduce peak memory
-        #     global_rank = get_world_group().rank_in_group
-        #     step = hidden_states.shape[0] * topk_ids.shape[0]  # topk 8 expert
-        #     cur_topk_list = [
-        #         (i + global_rank // 1) % 512 for i in range(
-        #             global_rank // 1 * step, (global_rank // 1 + 1) * step)]
-        #     topk_ids = torch.Tensor(cur_topk_list).int().view(hidden_states.shape[0], -1).npu()
-        # else:
-        #     topk_ids = topk_ids.int()
+        if self.warm_up:
+            # This is forced balancing, the goal is to reduce peak memory
+            global_rank = get_world_group().rank_in_group
+            step = hidden_states.shape[0] * topk_ids.shape[1]  # topk 8 expert
+            cur_topk_list = [
+                (i + global_rank // 1) % 512 for i in range(
+                    global_rank // 1 * step, (global_rank // 1 + 1) * step)]
+            topk_ids = torch.Tensor(cur_topk_list).int().view(hidden_states.shape[0], -1).npu()
+        else:
+            topk_ids = topk_ids.int()
         max_num_deployed_expert = 512
         expert_range = [0, max_num_deployed_expert]
         expanded_x, expanded_row_idx, tokens_per_expert, pertoken_scale = torch_npu.npu_moe_init_routing_v2(
@@ -165,10 +165,9 @@ class FusedMoE(torch.nn.Module):
         prefix: str = "",
     ):
         super().__init__()
-        ep_size = get_ep_group().world_size
-        if ep_size > 1:
-            ep_size = ep_size - model_extra_config.parall_config.redundancy_shared_expert_num
-            num_experts = int(num_experts / ep_size)
+        self.ep_size = get_ep_group().world_size
+        if self.ep_size > 1:
+            num_experts = int(num_experts / self.ep_size)
             tp_size = 1
 
         if params_dtype is None:
@@ -177,6 +176,7 @@ class FusedMoE(torch.nn.Module):
         self.tp_size = (tp_size if tp_size is not None else
                         get_ep_group().world_size)
         self.num_experts = num_experts
+        self.hidden_size = hidden_size
         self.intermediate_size_per_partition = intermediate_size // self.tp_size
         self.reduce_results = reduce_results
         if quant_config is None:
@@ -198,14 +198,13 @@ class FusedMoE(torch.nn.Module):
         self.quant_method.create_weights(
             layer=self,
             num_experts=num_experts + num_of_redundant_experts,  # ENABLE_OMNI_PLANNER
-            hidden_size=hidden_size,
+            hidden_size=self.hidden_size,
             intermediate_size_per_partition=self.intermediate_size_per_partition,
             params_dtype=params_dtype,
             weight_loader=self.weight_loader)
 
         if model_extra_config.operator_opt_config.decode_moe_dispatch_combine:
             # Adapt the dispatch combine operator
-            self.ep_size = get_ep_group().world_size
             self.global_rank = get_world_group().rank_in_group
             self.world_size = get_world_group().world_size
             # self.n_shared_experts = n_shared_experts
@@ -391,3 +390,11 @@ class FusedMoE(torch.nn.Module):
                 expert_data=expert_data,
                 tp_rank=tp_rank)
             return
+
+    def extra_repr(self) -> str:
+        s = f"intermediate_size={self.intermediate_size_per_partition}"
+        s += f", hidden_size={self.hidden_size}"
+        s += f", num_experts={self.num_experts}"
+        s += f", ep_size={self.ep_size}"
+        s += f", tp_size={self.tp_size}"
+        return s
