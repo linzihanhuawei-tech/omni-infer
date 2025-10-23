@@ -71,7 +71,6 @@ def check_stop(request: Request, max_model_len: int) -> bool:
 
 
 def patch_enable_max_token_exclude_reasoning():
-    from vllm.v1.core.sched import utils
     from vllm.v1.core.sched import scheduler
     from vllm.v1 import request
 
