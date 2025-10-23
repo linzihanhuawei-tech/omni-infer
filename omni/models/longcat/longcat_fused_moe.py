@@ -73,8 +73,15 @@ class UnquantizedFusedMoEMethod(GPUUnquantizedFusedMoEMethod):
         else:
             topk_ids = topk_ids.int()
         max_num_deployed_expert = 512
-        if model_extra_config.task_config.enable_omni_placement and layer.is_moe_layer(layer.moe_layer_idx):
-            max_num_deployed_expert = layer.planner.get_max_num_deployed_expert_per_rank() * get_world_group().world_size
+        if (
+            model_extra_config.task_config.enable_omni_placement
+            and layer.planner is not None
+            and layer.planner.is_moe_layer(layer.moe_layer_idx)
+        ):
+            max_num_deployed_expert = (
+                layer.planner.get_max_num_deployed_expert_per_rank()
+                * get_world_group().world_size
+            )
         expert_range = [0, max_num_deployed_expert]
         expanded_x, expanded_row_idx, tokens_per_expert, pertoken_scale = torch_npu.npu_moe_init_routing_v2(
             hidden_states,
