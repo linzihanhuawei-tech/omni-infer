@@ -1,19 +1,26 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2025 Huawei Technologies Co., Ltd. All Rights Reserved.
 
-from typing import Optional
+from typing import Optional, Callable
+import os
 import torch, torch_npu
+import torchair as tng
 import torch.distributed as dist
 from vllm.distributed import get_world_group, get_pp_group, get_ep_group, get_tp_group
 from vllm.attention import AttentionMetadata
 from vllm.platforms import current_platform
+from vllm.forward_context import get_forward_context
 from vllm.model_executor.layers.fused_moe.layer import FusedMoE as GPUFusedMoE
 from vllm.model_executor.layers.fused_moe.layer import UnquantizedFusedMoEMethod as GPUUnquantizedFusedMoEMethod
 from vllm.model_executor.layers.fused_moe.layer import FusedMoeWeightScaleSupported
 from vllm.model_executor.layers.quantization.base_config import (
     QuantizationConfig, QuantizeMethodBase)
 from omni.adaptors.vllm.distributed.parallel_state import GroupCoordinator
-from omni.models.common.config.model_config import model_extra_config
+from omni.models.config_loader.loader import model_extra_config
+from omni.layers.moe.fused_moe.fused_moe import (
+    fused_topk,
+    grouped_topk
+)
 
 UNQUANT_MODE = 0
 STATIC_QUANT_MODE = 1
@@ -66,6 +73,8 @@ class UnquantizedFusedMoEMethod(GPUUnquantizedFusedMoEMethod):
         else:
             topk_ids = topk_ids.int()
         max_num_deployed_expert = 512
+        if model_extra_config.task_config.enable_omni_placement and layer.is_moe_layer(layer.moe_layer_idx):
+            max_num_deployed_expert = layer.planner.get_max_num_deployed_expert_per_rank() * get_world_group().world_size
         expert_range = [0, max_num_deployed_expert]
         expanded_x, expanded_row_idx, tokens_per_expert, pertoken_scale = torch_npu.npu_moe_init_routing_v2(
             hidden_states,
@@ -108,7 +117,10 @@ class UnquantizedFusedMoEMethod(GPUUnquantizedFusedMoEMethod):
             per_token_scales=None
         )
         group_list = tokens_per_local_expert.to(torch.int64)
-
+        if model_extra_config.task_config.enable_omni_placement:
+            layer.planner.record_activation(layer.moe_layer_idx, group_list,
+                                            support_multi_stream=model_extra_config.operator_opt_config.moe_multi_stream_tune and (
+                                                not is_prefill))
         mm1_mm3 = torch_npu.npu_grouped_matmul([hidden_states_sorted_by_experts], [w1],
                                                group_list=group_list, split_item=3, group_type=0,
                                                group_list_type=1)[0]
@@ -154,20 +166,37 @@ class FusedMoE(torch.nn.Module):
     # _load_fp8_scale = GPUFusedMoE._load_fp8_scale
 
     def __init__(
-        self,
-        num_experts: int,
-        hidden_size: int,
-        intermediate_size: int,
-        params_dtype: Optional[torch.dtype] = None,
-        reduce_results: bool = False,
-        quant_config: Optional[QuantizationConfig] = None,
-        tp_size: Optional[int] = None,
-        prefix: str = "",
+            self,
+            num_experts: int,
+            top_k: int,
+            hidden_size: int,
+            intermediate_size: int,
+            params_dtype: Optional[torch.dtype] = None,
+            reduce_results: bool = False,
+            renormalize: bool = True,
+            use_grouped_topk: bool = False,
+            num_expert_group: Optional[int] = None,
+            topk_group: Optional[int] = None,
+            quant_config: Optional[QuantizationConfig] = None,
+            tp_size: Optional[int] = None,
+            prefix: str = "",
+            custom_routing_function: Optional[Callable] = None,
+            scoring_func: str = "softmax",
+            e_score_correction_bias: Optional[torch.Tensor] = None,
+            first_k_dense_replace: int = 3,
+            **kwargs
     ):
         super().__init__()
-        self.ep_size = get_ep_group().world_size
-        if self.ep_size > 1:
-            num_experts = int(num_experts / self.ep_size)
+        # OMNI_PLANNER: import omni planner instance, all layers share the same instance(singleton instance)
+        self.planner = kwargs.get("planner", None)
+        self.moe_layer_idx = kwargs.get("moe_layer_idx", None)
+        self.expert_mapping = kwargs.get("expert_mapping", None)
+        ep_size = get_ep_group().world_size
+        if ep_size > 1:
+            if model_extra_config.parall_config.enable_attn_ffn_disaggregation:
+                ep_size = ep_size - model_extra_config.parall_config.attn_dies
+            ep_size = ep_size - model_extra_config.parall_config.redundancy_shared_expert_num
+            num_experts = int(num_experts / ep_size)
             tp_size = 1
 
         if params_dtype is None:
@@ -175,10 +204,19 @@ class FusedMoE(torch.nn.Module):
 
         self.tp_size = (tp_size if tp_size is not None else
                         get_ep_group().world_size)
+        self.top_k = top_k
         self.num_experts = num_experts
-        self.hidden_size = hidden_size
         self.intermediate_size_per_partition = intermediate_size // self.tp_size
         self.reduce_results = reduce_results
+        self.renormalize = renormalize
+        self.use_grouped_topk = use_grouped_topk
+        if self.use_grouped_topk:
+            if num_expert_group is None or topk_group is None:
+                raise RuntimeError("num_expert_group and topk_group must not be None")
+        self.num_expert_group = num_expert_group
+        self.topk_group = topk_group
+        self.custom_routing_function = custom_routing_function
+        self.is_prefill_instance = os.environ.get("ROLE", "") == "prefill"
         if quant_config is None:
             self.quant_method: Optional[QuantizeMethodBase] = (
                 UnquantizedFusedMoEMethod())
@@ -191,20 +229,26 @@ class FusedMoE(torch.nn.Module):
 
         # ENABLE_OMNI_PLANNER
         num_of_redundant_experts = 0
-        if model_extra_config.operator_opt_config.use_omni_placement:
+        if model_extra_config.task_config.enable_omni_placement:
             num_of_redundant_experts = self.planner.get_num_of_redundant_experts(moe_layer_idx=self.moe_layer_idx,
                                                                                  num_expert_per_device_origin=num_experts,
                                                                                  rank_device=get_ep_group().rank_in_group - model_extra_config.parall_config.redundancy_shared_expert_num)
         self.quant_method.create_weights(
             layer=self,
             num_experts=num_experts + num_of_redundant_experts,  # ENABLE_OMNI_PLANNER
-            hidden_size=self.hidden_size,
+            hidden_size=hidden_size,
             intermediate_size_per_partition=self.intermediate_size_per_partition,
             params_dtype=params_dtype,
             weight_loader=self.weight_loader)
+        self.scoring_func = scoring_func
+        self.e_score_correction_bias = e_score_correction_bias
+        if self.scoring_func != "softmax" and not self.use_grouped_topk:
+            raise ValueError("Only softmax scoring function is supported for "
+                             "non-grouped topk.")
 
         if model_extra_config.operator_opt_config.decode_moe_dispatch_combine:
             # Adapt the dispatch combine operator
+            self.ep_size = get_ep_group().world_size
             self.global_rank = get_world_group().rank_in_group
             self.world_size = get_world_group().world_size
             # self.n_shared_experts = n_shared_experts
@@ -218,6 +262,103 @@ class FusedMoE(torch.nn.Module):
             self.moe_rs_group_name = self.moe_rs_group._get_backend(
                 torch.device(current_platform.device_type)).get_hccl_comm_name(
                 self.moe_rs_group_rank)
+
+    def apply_expert_load_balance(
+            self,
+            topk_ids: torch.Tensor,
+            best_topk_ids: Optional[torch.Tensor] = None
+    ) -> torch.Tensor:
+        # omni placement
+        if self.planner is not None:
+            _, topk_ids, _ = self.planner.plan(
+                layer_idx_moe=self.moe_layer_idx,
+                tokens=None,
+                token_expert_ids=topk_ids,
+                token_expert_scores=None,
+                expert_mapping=self.expert_mapping
+            )
+
+        # TODO best_ep for longcat
+        # Forced load balance
+        if model_extra_config.operator_opt_config.best_ep:
+            if self.is_prefill_instance:
+                t = (topk_ids.shape[0] * 8) // 256
+                topk_ids = torch.arange(256, device=current_platform.device_type, dtype=torch.int32).unsqueeze(
+                    0).repeat(t + 1, 1).view(-1, 8)[:topk_ids.shape[0]]
+            elif best_topk_ids is not None:
+                if model_extra_config.operator_opt_config.moe_multi_stream_tune:
+                    topk_ids = tng.scope.npu_wait_tensor(best_topk_ids, topk_ids)
+                else:
+                    topk_ids = best_topk_ids
+
+        return topk_ids
+
+    @staticmethod
+    def select_experts(hidden_states: torch.Tensor,
+                       router_logits: torch.Tensor,
+                       top_k: int,
+                       use_grouped_topk: bool,
+                       renormalize: bool,
+                       topk_group: Optional[int] = None,
+                       num_expert_group: Optional[int] = None,
+                       custom_routing_function: Optional[Callable] = None,
+                       scoring_func: str = "softmax",
+                       e_score_correction_bias: Optional[torch.Tensor] = None,
+                       routed_scaling_factor: Optional[torch.Tensor] = None,
+                       layer: torch.nn.Module = None
+                       ):
+        # For vllm v1, metadata is a dict {layer_name: metadata}
+        attn_metadata = get_forward_context().attn_metadata
+        if isinstance(attn_metadata, dict):
+            attn_metadata = attn_metadata[next(iter(attn_metadata))]
+        is_prefill = attn_metadata is None or attn_metadata.prefill is not None
+        # DeekSeekv2 uses grouped_top_k
+        # adapt: When num_expert_group=1, it degenerates to fused_topk.
+        if use_grouped_topk:  # and num_expert_group != 1:
+            # adapt end.
+            if topk_group is None:
+                raise ValueError(f"Unsupported topk_group is None")
+            if num_expert_group is None:
+                raise ValueError(f"Unsupported num_expert_group is None")
+
+            if e_score_correction_bias is None and attn_metadata is None:
+                topk_weights, topk_ids, row_idx = grouped_topk(
+                    hidden_states=hidden_states,
+                    gating_output=router_logits,
+                    topk=top_k,
+                    renormalize=renormalize,
+                    num_expert_group=num_expert_group,
+                    topk_group=topk_group,
+                    scoring_func=scoring_func,
+                    e_score_correction_bias=e_score_correction_bias)
+                topk_weights = topk_weights * routed_scaling_factor
+            else:
+                topk_weights, topk_ids, _ = torch_npu.npu_moe_gating_top_k(
+                    router_logits.float(),
+                    k=top_k,  # topk is currently 8
+                    bias=e_score_correction_bias,  # float32
+                    k_group=topk_group,  # fix: 4
+                    group_count=num_expert_group,  # fix 8
+                    group_select_mode=1,  # 0: maximum in group; 1: topk2.sum(fix)
+                    renorm=0,  # 0: softmax->topk(fix); 1: topk->softmax
+                    norm_type=1,  # 0: softmax; 1: sigmoid(fix)
+                    routed_scaling_factor=routed_scaling_factor,
+                    eps=float(1e-20))
+            row_idx = torch.arange(topk_ids.numel(), device=current_platform.device_type, dtype=torch.int32).view(
+                -1, router_logits.shape[
+                    0]).transpose(0, 1)
+        elif custom_routing_function is None:
+            topk_weights, topk_ids, row_idx = fused_topk(gating_output=router_logits,
+                                                         topk=top_k,
+                                                         renormalize=renormalize)
+        else:
+            topk_weights, topk_ids, row_idx = custom_routing_function(
+                hidden_states=hidden_states,
+                gating_output=router_logits,
+                topk=top_k,
+                renormalize=renormalize)
+
+        return topk_weights, topk_ids, row_idx
 
     def _load_per_channel_weight_scale(self, expert_data: torch.Tensor,
                                        shard_dim: int, shard_id: str,
@@ -269,7 +410,7 @@ class FusedMoE(torch.nn.Module):
         if get_ep_group().world_size > 1:
             ep_rank = get_ep_group().rank_in_group - model_extra_config.parall_config.redundancy_shared_expert_num
             # ENABLE_OMNI_PLANNER
-            if model_extra_config.operator_opt_config.use_omni_placement:
+            if model_extra_config.task_config.enable_omni_placement:
                 # OMNI_PLANNER: determine the expert deployment based on the pattern
                 exists_locally, local_pos = self.planner.is_expert_on_current_rank(self.moe_layer_idx, expert_id,
                                                                                    ep_rank, self.num_experts)
