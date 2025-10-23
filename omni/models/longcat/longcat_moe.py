@@ -60,7 +60,6 @@ from omni.adaptors.vllm.distributed.communication_op import (
 from omni.adaptors.vllm.distributed.parallel_state import (
     get_round_cross_group_from_list
 )
-from omni.layers.moe.fused_moe.layer import FusedMoE
 from omni.models.config_loader.loader import model_extra_config
 from omni.adaptors.vllm.utils import get_attr_by_names
 
@@ -157,8 +156,24 @@ class LongcatFlashMoE(nn.Module):
                                              rounter_params_dtype=router_params_dtype,
                                              prefix=f"{prefix}.router")
 
-        self.top_k = config.moe_topk
+        self.gate = self.router
+        if getattr(config, "topk_method", "topk") == "noaux_tc":
+            self.gate.e_score_correction_bias = nn.Parameter(
+                torch.empty(self.n_routed_experts, dtype=torch.float), requires_grad=False)
+        else:
+            self.gate.e_score_correction_bias = None
+
+        self.top_k = config.num_experts_per_tok
+        self.use_grouped_topk = True
         self.renormalize = getattr(config, "norm_topk_prob", True)
+        self.topk_group = getattr(config, "topk_group", 1)
+        self.num_expert_group = getattr(config, "n_group", 1)
+        self.custom_routing_function = None
+        self.scoring_func = getattr(config, "scoring_func", "sigmoid")
+        n_shared_experts_names = ['num_shared_experts', 'n_shared_experts']
+        first_k_dense_replace_names = ['num_dense_layers', 'first_k_dense_replace']
+        self.n_shared_experts = get_attr_by_names(config, n_shared_experts_names, 1)
+        self.first_k_dense_replace = get_attr_by_names(config, first_k_dense_replace_names, 3)
         self.experts = None
         self.global_rank = get_world_group().rank_in_group
         self.planner = None

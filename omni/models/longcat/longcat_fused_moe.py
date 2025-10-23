@@ -187,11 +187,13 @@ class FusedMoE(torch.nn.Module):
             **kwargs
     ):
         super().__init__()
+        self.hidden_size = hidden_size
         # OMNI_PLANNER: import omni planner instance, all layers share the same instance(singleton instance)
         self.planner = kwargs.get("planner", None)
         self.moe_layer_idx = kwargs.get("moe_layer_idx", None)
         self.expert_mapping = kwargs.get("expert_mapping", None)
         ep_size = get_ep_group().world_size
+        self.ep_size = ep_size
         if ep_size > 1:
             if model_extra_config.parall_config.enable_attn_ffn_disaggregation:
                 ep_size = ep_size - model_extra_config.parall_config.attn_dies
