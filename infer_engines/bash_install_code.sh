@@ -26,3 +26,4 @@ git apply --whitespace=nowarn $PATCH_ROOT/swap_kv_cache.patch
 git apply --whitespace=nowarn $PATCH_ROOT/combine_block.patch
 git apply --whitespace=nowarn $PATCH_ROOT/health_check.patch
 git apply --whitespace=nowarn $PATCH_ROOT/function_calling_and_reasoning_content.patch
+git apply --whitespace=nowarn $PATCH_ROOT/extract_layer_index.patch
