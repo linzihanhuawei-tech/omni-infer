@@ -48,7 +48,6 @@ from omni.layers.linear import (
     MergedReplicatedLinear,
 )
 from omni.layers.activation import SiluAndMul
-# from omni.layers.moe.fused_moe.layer import FusedMoE, UNQUANT_MODE, DYNAMIC_QUANT_MODE, FakeMoe
 from omni.models.longcat.longcat_fused_moe import FusedMoE
 from omni.adaptors.vllm.distributed.communication_op import (
     all_gather_two_stage,
@@ -106,7 +105,9 @@ class LongcatFlashTopkRouter(nn.Module):
     def get_topk_indices(self, classify_score):
         n_routed_experts = classify_score.shape[-1]
         scores = classify_score.softmax(dim=-1)
-        scores_for_choice = scores.view(-1, n_routed_experts) + self.e_score_correction_bias.unsqueeze(0)
+        scores_for_choice = scores.view(-1, n_routed_experts)
+        if self.e_score_correction_bias is not None:
+            scores_for_choice = scores_for_choice + self.e_score_correction_bias.unsqueeze(0)
         # TODO：npu_moe_gating_top_k算子有问题，只支持256和384专家。
         # return torch_npu.npu_moe_gating_top_k(
         #     router_logits.float(),
@@ -322,7 +323,12 @@ class LongcatFlashMoE(nn.Module):
 
         group_list = expert_token_nums.to(torch.int64)
         if model_extra_config.task_config.enable_omni_placement:
-            layer.planner.record_activation(layer.moe_layer_idx, group_list, support_multi_stream=model_extra_config.operator_opt_config.moe_multi_stream_tune and (not is_prefill))
+            is_prefill = attn_metadata is not None and getattr(attn_metadata, "prefill", None) is not None
+            layer.planner.record_activation(
+                layer.moe_layer_idx,
+                group_list,
+                support_multi_stream=model_extra_config.operator_opt_config.moe_multi_stream_tune and (not is_prefill),
+            )
 
         # cal experts
         weight1_3 = self.experts.w13_weight
