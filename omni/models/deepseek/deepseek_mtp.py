@@ -71,7 +71,7 @@ class DeepseekMultiTokenPredictorLayer(DeepseekDecoderLayer):
         super().__init__(self.config, prefix,
                          cache_config=self.cache_config,
                          quant_config=self.quant_config,
-                         is_ffn_die=is_ffn_die,
+                         **({"is_ffn_die": True} if is_ffn_die else {})
                         )
 
         self.ignore_share_weight = True # TODO get from config
@@ -211,17 +211,20 @@ class DeepseekMultiTokenPredictor(nn.Module):
         self.mtp_start_layer_idx = self.config.num_hidden_layers
         self.num_mtp_layers = self.config.num_nextn_predict_layers
         self.ignore_share_weight = True # TODO get from config
-        is_ffn_die = False
+        kwargs = {}
         if model_extra_config.parall_config.enable_attn_ffn_disaggregation:
-            ffn_dies = get_ep_group().world_size - model_extra_config.parall_config.attn_dies
-            if get_ep_group().rank_in_group < ffn_dies:
-                is_ffn_die = True
+            if os.getenv("ASCEND_PLATFORM", "A3") == "A2":
+                raise NotImplementedError("Attention FFN disaggregation on A2 is not supported")
+            else:
+                ffn_dies = get_ep_group().world_size - model_extra_config.parall_config.attn_dies
+                if get_ep_group().rank_in_group < ffn_dies:
+                    kwargs["is_ffn_die"] = True
         self.layers = nn.ModuleDict({
             str(i + self.mtp_start_layer_idx):
             DeepseekMultiTokenPredictorLayer(
                 vllm_config=vllm_config,
                 prefix=f"{prefix}.layers.{i + self.mtp_start_layer_idx}",
-                is_ffn_die=is_ffn_die,
+                **kwargs
             )
             for i in range(min(self.num_mtp_layers, vllm_config.speculative_config.num_speculative_tokens))
         })
