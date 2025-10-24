@@ -184,7 +184,19 @@ class LongcatFlashMoE(nn.Module):
         self.topk_group = getattr(config, "topk_group", 1)
         self.num_expert_group = getattr(config, "n_group", 1)
         self.custom_routing_function = None
-        self.scoring_func = getattr(config, "scoring_func", "sigmoid")
+
+        configured_scoring_func = getattr(config, "scoring_func", None)
+        if configured_scoring_func is None:
+            self.scoring_func = "softmax"
+        else:
+            self.scoring_func = configured_scoring_func
+
+        if self.scoring_func != "softmax" and not self.use_grouped_topk:
+            rank0_log(
+                "LongcatFlashMoE falling back to 'softmax' scoring function because "
+                f"'{self.scoring_func}' requires grouped top-k routing."
+            )
+            self.scoring_func = "softmax"
         self.experts = None
         self.global_rank = get_world_group().rank_in_group
         self.planner = None
