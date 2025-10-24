@@ -202,11 +202,22 @@ class LongcatFlashMoE(nn.Module):
                                     num_redundancy_shared_expert_rank=self.redundancy_shared_expert_num)
             self.moe_layer_idx = OmniPlanner.get_longcat_moe_layer_idx(moe_prefix, first_k_dense_replace=self.first_k_dense_replace)
             self.expert_mapping = self.planner.expert_mapping_on_current_layer(self.moe_layer_idx)
+        moe_intermediate_size = getattr(
+            config,
+            "moe_intermediate_size",
+            getattr(config, "expert_ffn_hidden_size", None),
+        )
+        if moe_intermediate_size is None:
+            raise AttributeError(
+                "LongcatFlash config must define 'moe_intermediate_size' or"
+                " 'expert_ffn_hidden_size' for MoE initialization."
+            )
+
         self.experts = FusedMoE(
             num_experts=self.n_routed_experts,
             top_k=self.top_k,
             hidden_size=config.hidden_size,
-            intermediate_size=config.moe_intermediate_size,
+            intermediate_size=moe_intermediate_size,
             reduce_results=False,
             renormalize=self.renormalize,
             quant_config=quant_config,

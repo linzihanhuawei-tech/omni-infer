@@ -260,12 +260,23 @@ class LongcatFlashMoE(nn.Module):
         )
         self.topk.forward = self.topk.forward_native
 
+        moe_intermediate_size = getattr(
+            config,
+            "moe_intermediate_size",
+            getattr(config, "expert_ffn_hidden_size", None),
+        )
+        if moe_intermediate_size is None:
+            raise AttributeError(
+                "LongcatFlash config must define 'moe_intermediate_size' or"
+                " 'expert_ffn_hidden_size' for MoE initialization."
+            )
+
         self.experts = get_moe_impl_class()(
             num_experts=self.num_experts,
             top_k=self.top_k,
             layer_id=self.layer_id,
             hidden_size=config.hidden_size,
-            intermediate_size=config.moe_intermediate_size,
+            intermediate_size=moe_intermediate_size,
             quant_config=quant_config,
             prefix=add_prefix("experts", prefix),
         )
