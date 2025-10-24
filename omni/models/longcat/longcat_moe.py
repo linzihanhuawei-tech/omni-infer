@@ -23,7 +23,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Inference-only DeepseekV3 model."""
-from typing import Optional
+import os
+from typing import Dict, Optional, Tuple
 import torch, torch_npu
 from torch import nn
 from transformers import PretrainedConfig
@@ -35,16 +36,37 @@ from vllm.config import QuantizationConfig
 from vllm.attention import AttentionMetadata
 from vllm.distributed import (
     get_ep_group,
+    get_pp_group,
     get_dp_group,
     get_world_group,
     get_tensor_model_parallel_rank
 )
-from vllm.model_executor.layers.linear import ReplicatedLinear
+from vllm.model_executor.layers.linear import (
+    ReplicatedLinear,
+)
+from omni.layers.linear import (
+    MergedReplicatedLinear,
+)
+from omni.layers.activation import SiluAndMul
 
 from omni.models.longcat.longcat_fused_moe import FusedMoE
+
+from omni.adaptors.vllm.distributed.communication_op import (
+    all_gather_two_stage,
+    reduce_scatter_two_stage,
+    prefill_reduce_scatter_pipeline,
+    all_gather_local, reduce_scatter_local,
+    all_gather_cross
+)
+from omni.adaptors.vllm.distributed.parallel_state import (
+    get_round_cross_group_from_list
+)
 from omni.models.config_loader.loader import model_extra_config
+from omni.layers.moe.fused_moe.fused_moe import fused_experts_moe_dispatch_combine
 from omni.adaptors.vllm.utils import get_attr_by_names
 
+if model_extra_config.task_config.enable_omni_placement:
+    from omni.accelerators.placement.omni_placement.omni_planner import OmniPlanner
 
 """NPU Stream Switch Names"""
 STREAM_SHARED_EXPERT = 'stream_shared_expert'
@@ -117,6 +139,9 @@ class LongcatFlashMoE(nn.Module):
         self.prefix = prefix
         self.ep_size = get_ep_group().world_size
         self.routed_scaling_factor = config.routed_scaling_factor
+        self.device_count = torch.npu.device_count()
+        self.node_rank = get_world_group().rank_in_group // self.device_count
+        self.which_half = get_world_group().rank_in_group // (get_world_group().world_size // 2)
 
         n_routed_experts_names = ['num_routed_experts', 'n_routed_experts']
         self.n_routed_experts = get_attr_by_names(config, n_routed_experts_names, 256)
@@ -124,6 +149,16 @@ class LongcatFlashMoE(nn.Module):
         self.redundancy_shared_expert_num = model_extra_config.parall_config.redundancy_shared_expert_num
         self.quant_symbol = quant_config is not None
         self.is_init_gate = False
+        if os.getenv("ASCEND_PLATFORM", "A3")=="A2":
+            self.is_A2 = True
+            params_dtype = torch.bfloat16
+        else:
+            self.is_A2 = False
+            params_dtype = torch.float32
+        if self.ep_size > (self.n_routed_experts + self.redundancy_shared_expert_num):
+            raise ValueError(
+                f"Tensor parallel size {self.ep_size} is greater than "
+                f"the number of experts {self.n_routed_experts} + {self.redundancy_shared_expert_num}.")
 
         if config.hidden_act != "silu":
             raise ValueError(f"Unsupported activation: {config.hidden_act}. "
@@ -135,20 +170,55 @@ class LongcatFlashMoE(nn.Module):
                                              router_expert_num=self.n_routed_experts,
                                              rounter_params_dtype=router_params_dtype,
                                              prefix=f"{prefix}.router")
+        
+        self.gate = self.router
+        if getattr(config, "topk_method", "topk") == "noaux_tc":
+            self.gate.e_score_correction_bias = nn.Parameter(
+                torch.empty(self.n_routed_experts, dtype=torch.float), requires_grad=False)
+        else:
+            self.gate.e_score_correction_bias = None
 
         self.top_k = config.moe_topk
+        self.use_grouped_topk = False
         self.renormalize = getattr(config, "norm_topk_prob", True)
+        self.topk_group = getattr(config, "topk_group", 1)
+        self.num_expert_group = getattr(config, "n_group", 1)
+        self.custom_routing_function = None
+        self.scoring_func = getattr(config, "scoring_func", "sigmoid")
+        self.experts = None
         self.global_rank = get_world_group().rank_in_group
+        self.planner = None
+        self.moe_layer_idx = None
+        self.expert_mapping = None
 
         moe_prefix = f"{prefix}.experts"
         # omni placement for redundancy route experts
+        if model_extra_config.task_config.enable_omni_placement:
+            self.planner = OmniPlanner(device="npu",
+                                    rank=get_world_group().rank_in_group,
+                                    world_size=get_world_group().world_size,
+                                    num_experts=self.n_routed_experts,
+                                    num_redundancy_shared_expert_rank=self.redundancy_shared_expert_num)
+            self.moe_layer_idx = OmniPlanner.get_deepseek_v3_moe_layer_idx(moe_prefix, first_k_dense_replace=self.first_k_dense_replace)
+            self.expert_mapping = self.planner.expert_mapping_on_current_layer(self.moe_layer_idx)
         self.experts = FusedMoE(
             num_experts=self.n_routed_experts,
+            top_k=self.top_k,
             hidden_size=config.hidden_size,
-            intermediate_size=config.expert_ffn_hidden_size,
+            intermediate_size=config.moe_intermediate_size,
             reduce_results=False,
+            renormalize=self.renormalize,
             quant_config=quant_config,
+            use_grouped_topk=self.use_grouped_topk,
+            num_expert_group=self.num_expert_group,
+            topk_group=self.topk_group,
             prefix=moe_prefix,
+            scoring_func=self.scoring_func,
+            e_score_correction_bias=self.gate.e_score_correction_bias,
+            planner=self.planner,
+            moe_layer_idx=self.moe_layer_idx,
+            expert_mapping=self.expert_mapping,
+            first_k_dense_replace=self.first_k_dense_replace
         )
         self.local_expert_num = self.experts.w13_weight.shape[0]
         if self.quant_symbol:
@@ -185,6 +255,7 @@ class LongcatFlashMoE(nn.Module):
     def _forward_prefill_norm(self, hidden_states: torch.Tensor, attn_metadata: AttentionMetadata) -> torch.Tensor:
         router_logits, _ = self.router.forward(hidden_states.float())
         topk_weights, topk_ids = self.router.get_topk_indices(router_logits)
+        topk_ids = self.experts.apply_expert_load_balance(topk_ids=topk_ids)
         zero_expert_output, topk_ids, topk_weights = self.compute_zero_experts(hidden_states, topk_weights, topk_ids)
         final_hidden_states = self.experts(
             hidden_states=hidden_states,
@@ -221,6 +292,7 @@ class LongcatFlashMoE(nn.Module):
     def _forward_decode_dispatch_combine(self, hidden_states: torch.Tensor, attn_metadata: AttentionMetadata) -> torch.Tensor:
         router_logits, _ = self.router.forward(hidden_states.float())
         topk_weights, topk_ids = self.router.get_topk_indices(router_logits)
+        topk_ids = self.experts.apply_expert_load_balance(topk_ids=topk_ids, best_topk_ids=attn_metadata.decode.best_topk)
         zero_expert_output, topk_ids, topk_weights = self.compute_zero_experts(hidden_states, topk_weights, topk_ids)
 
         mc2_mask = attn_metadata.decode.mc2_mask if attn_metadata is not None and attn_metadata.decode is not None else None
@@ -261,6 +333,8 @@ class LongcatFlashMoE(nn.Module):
         expand_x, dynamic_scale, expand_idx, expert_token_nums, ep_recv_counts = output[0:5]
 
         group_list = expert_token_nums.to(torch.int64)
+        if model_extra_config.task_config.enable_omni_placement:
+            layer.planner.record_activation(layer.moe_layer_idx, group_list, support_multi_stream=model_extra_config.operator_opt_config.moe_multi_stream_tune and (not is_prefill))
 
         # cal experts
         weight1_3 = self.experts.w13_weight
