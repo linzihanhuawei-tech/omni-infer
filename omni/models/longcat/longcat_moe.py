@@ -190,6 +190,7 @@ class LongcatFlashMoE(nn.Module):
         self.planner = None
         self.moe_layer_idx = None
         self.expert_mapping = None
+        self.first_k_dense_replace = 0
 
         moe_prefix = f"{prefix}.experts"
         # omni placement for redundancy route experts
@@ -199,7 +200,7 @@ class LongcatFlashMoE(nn.Module):
                                     world_size=get_world_group().world_size,
                                     num_experts=self.n_routed_experts,
                                     num_redundancy_shared_expert_rank=self.redundancy_shared_expert_num)
-            self.moe_layer_idx = OmniPlanner.get_deepseek_v3_moe_layer_idx(moe_prefix, first_k_dense_replace=self.first_k_dense_replace)
+            self.moe_layer_idx = OmniPlanner.get_longcat_moe_layer_idx(moe_prefix, first_k_dense_replace=self.first_k_dense_replace)
             self.expert_mapping = self.planner.expert_mapping_on_current_layer(self.moe_layer_idx)
         self.experts = FusedMoE(
             num_experts=self.n_routed_experts,
@@ -290,6 +291,7 @@ class LongcatFlashMoE(nn.Module):
             return self._forward_decode_dispatch_combine(hidden_states, attn_metadata)
 
     def _forward_decode_dispatch_combine(self, hidden_states: torch.Tensor, attn_metadata: AttentionMetadata) -> torch.Tensor:
+        is_prefill = (attn_metadata is None or attn_metadata.prefill is not None)
         router_logits, _ = self.router.forward(hidden_states.float())
         topk_weights, topk_ids = self.router.get_topk_indices(router_logits)
         topk_ids = self.experts.apply_expert_load_balance(topk_ids=topk_ids, best_topk_ids=attn_metadata.decode.best_topk)

@@ -429,6 +429,39 @@ class OmniPlanner(metaclass=OmniPlannerMeta):
 
 
     @staticmethod
+    def get_longcat_moe_layer_idx(prefix: str, first_k_dense_replace=0) -> int:
+        """
+        Calculate the adjusted DeepSeek-V3 MoE layer index from a model layer prefix.
+
+        The function parses a prefix string of format `model.layers.{N}.mlp.experts` to extract the
+        layer index `N`, then adjusts this index by subtracting a fixed offset of dense layers
+        (FIRST_K_DENSE_REPLACE) as per the DeepSeek-V3 model configuration.
+
+        Args:
+            prefix: A layer path string formatted as `model.layers.{N}.mlp.experts`
+                (e.g., "model.layers.5.mlp.experts" represents layer 5)
+
+        Returns:
+            int: The adjusted layer index after subtracting FIRST_K_DENSE_REPLACE.
+                Formula: parsed_layer_id - FIRST_K_DENSE_REPLACE
+
+        Note:
+            - LAYER_ID_IDX (2): Indicates layer ID position after splitting the prefix by '.'
+            (e.g., ["model", "layers", "5", "mlp", "experts"] -> index 2 is "5")
+            - FIRST_K_DENSE_REPLACE (3): Number of initial dense layers from the model's config.json
+            that should be excluded when working with MoE layers.
+
+        Example:
+            >>> get_deepseek_v3_moe_layer_idx("model.layers.5.mlp.experts")
+            2   # 5 (parsed) - 3 (offset) = 2
+        """
+        # Parses prefix string like 'model.layers.3.mlp.experts'
+        LAYER_ID_IDX = 2               # Position of the layer ID after splitting by '.'
+
+        return int(prefix.split(sep='.')[LAYER_ID_IDX]) - first_k_dense_replace
+
+
+    @staticmethod
     def get_deepseek_v3_moe_layer_idx(prefix: str, first_k_dense_replace=3) -> int:
         """
         Calculate the adjusted DeepSeek-V3 MoE layer index from a model layer prefix.
