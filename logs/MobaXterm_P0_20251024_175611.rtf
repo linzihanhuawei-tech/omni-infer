@@ -421,6 +421,379 @@
 \par \cf0\highlight0     raise RuntimeError("Engine core initialization failed. "\cf1\highlight2 
 \par \cf0\highlight0 RuntimeError: Engine core initialization failed. See root cause above. Failed core proc(s): \{'EngineCore_0': 1\}\cf1\highlight2 
 \par \cf0\highlight0 [ERROR] 2025-10-24-17:33:33 (PID:182759, Device:-1, RankID:-1) ERR99999 UNKNOWN applicaiton exception\cf1\highlight2 
+\par \cf0\highlight0 ^C\cf1\highlight2 
+\par \cf0\highlight0 [root@devserver-hps-a0f74d4d-g00615224-00030 p0]# tail -f server_0.log\cf1\highlight2 
+\par \cf0\highlight0 INFO 10-24 17:54:34 [importing.py:16] Triton not installed or not compatible; certain GPU-related functions will not be available.\cf1\highlight2 
+\par \cf0\highlight0 WARNING 10-24 17:54:34 [importing.py:28] Triton is not installed. Using dummy decorators. Install it via `pip install triton` to enable kernel compilation.\cf1\highlight2 
+\par \cf0\highlight0 INFO 10-24 17:54:34 [__init__.py:31] Available plugins for group vllm.platform_plugins:\cf1\highlight2 
+\par \cf0\highlight0 INFO 10-24 17:54:34 [__init__.py:33] - npu -> omni.adaptors.vllm.platform:register\cf1\highlight2 
+\par \cf0\highlight0 INFO 10-24 17:54:34 [__init__.py:36] All plugins in this group will be loaded. Set `VLLM_PLUGINS` to control which plugins to load.\cf1\highlight2 
+\par \cf0\highlight0 INFO 10-24 17:54:34 [__init__.py:234] Platform plugin npu is activated\cf1\highlight2 
+\par \cf0\highlight0 WARNING 10-24 17:54:36 [_custom_ops.py:21] Failed to import from vllm._C with ModuleNotFoundError("No module named 'vllm._C'")\cf1\highlight2 
+\par \cf0\highlight0 INFO 10-24 17:54:37 [__init__.py:31] Available plugins for group vllm.general_plugins:\cf1\highlight2 
+\par \cf0\highlight0 INFO 10-24 17:54:37 [__init__.py:33] - lora_filesystem_resolver -> vllm.plugins.lora_resolvers.filesystem_resolver:register_filesystem_resolver\cf1\highlight2 
+\par \cf0\highlight0 INFO 10-24 17:54:37 [__init__.py:33] - kv_connectors -> omni.accelerators.pd:register\cf1\highlight2 
+\par \cf0\highlight0 INFO 10-24 17:54:37 [__init__.py:33] - npu_optimized_models -> omni.models:register_model\cf1\highlight2 
+\par \cf0\highlight0 INFO 10-24 17:54:37 [__init__.py:33] - reasoning -> omni.adaptors.vllm.reasoning:register_reasoning\cf1\highlight2 
+\par \cf0\highlight0 INFO 10-24 17:54:37 [__init__.py:33] - tool_parsers -> omni.adaptors.vllm.entrypoints.openai.tool_parsers:register_tool\cf1\highlight2 
+\par \cf0\highlight0 INFO 10-24 17:54:37 [__init__.py:36] All plugins in this group will be loaded. Set `VLLM_PLUGINS` to control which plugins to load.\cf1\highlight2 
+\par \cf0\highlight0 WARNING 10-24 17:54:37 [registry.py:397] Model architecture DeepseekV2ForCausalLM is already registered, and will be overwritten by the new model class omni.models.deepseek.deepseek_v2:CustomDeepseekV2ForCausalLM.\cf1\highlight2 
+\par \cf0\highlight0 WARNING 10-24 17:54:37 [registry.py:397] Model architecture DeepseekV3ForCausalLM is already registered, and will be overwritten by the new model class omni.models.deepseek.deepseek_v3:DeepseekV3ForCausalLM.\cf1\highlight2 
+\par \cf0\highlight0 WARNING 10-24 17:54:37 [registry.py:397] Model architecture DeepSeekMTPModel is already registered, and will be overwritten by the new model class omni.models.deepseek.deepseek_mtp:DeepseekV3MTP.\cf1\highlight2 
+\par \cf0\highlight0 WARNING 10-24 17:54:37 [registry.py:397] Model architecture Qwen2ForCausalLM is already registered, and will be overwritten by the new model class omni.models.qwen.qwen2:Qwen2ForCausalLM.\cf1\highlight2 
+\par \cf0\highlight0 WARNING 10-24 17:54:37 [registry.py:397] Model architecture Qwen3ForCausalLM is already registered, and will be overwritten by the new model class omni.models.qwen.qwen3:Qwen3ForCausalLM.\cf1\highlight2 
+\par \cf0\highlight0 WARNING 10-24 17:54:37 [registry.py:397] Model architecture Qwen3MoeForCausalLM is already registered, and will be overwritten by the new model class omni.models.qwen.qwen3_moe:Qwen3MoeForCausalLM.\cf1\highlight2 
+\par \cf0\highlight0 WARNING 10-24 17:54:37 [registry.py:397] Model architecture LlamaForCausalLM is already registered, and will be overwritten by the new model class omni.models.llama.llama:LlamaForCausalLM.\cf1\highlight2 
+\par \cf0\highlight0 WARNING 10-24 17:54:37 [registry.py:397] Model architecture Qwen2_5_VLForConditionalGeneration is already registered, and will be overwritten by the new model class omni.models.qwen.qwen2_5_vl:Qwen2_5_VLForConditionalGeneration.\cf1\highlight2 
+\par \cf0\highlight0 WARNING 10-24 17:54:37 [registry.py:397] Model architecture Qwen2VLForConditionalGeneration is already registered, and will be overwritten by the new model class omni.models.qwen.qwen2_vl:Qwen2VLForConditionalGeneration.\cf1\highlight2 
+\par \cf0\highlight0 WARNING 10-24 17:54:37 [registry.py:397] Model architecture InternLM2ForCausalLM is already registered, and will be overwritten by the new model class omni.models.internvl.internlm2:InternLM2ForCausalLM.\cf1\highlight2 
+\par \cf0\highlight0 WARNING 10-24 17:54:37 [registry.py:397] Model architecture InternVLChatModel is already registered, and will be overwritten by the new model class omni.models.internvl.internvl:InternVLChatModel.\cf1\highlight2 
+\par \cf0\highlight0 WARNING 10-24 17:54:37 [registry.py:397] Model architecture Gemma3ForCausalLM is already registered, and will be overwritten by the new model class omni.models.gemma.gemma3:Gemma3ForCausalLM.\cf1\highlight2 
+\par \cf0\highlight0 WARNING 10-24 17:54:37 [registry.py:397] Model architecture Gemma3ForConditionalGeneration is already registered, and will be overwritten by the new model class omni.models.gemma.gemma3_mm:Gemma3ForConditionalGeneration.\cf1\highlight2 
+\par \cf0\highlight0 INFO 10-24 17:54:37 [config.py:1909] Disabled the custom all-reduce kernel because it is not supported on current platform.\cf1\highlight2 
+\par \cf0\highlight0 /usr/local/lib/python3.11/site-packages/torch_npu/dynamo/torchair/__init__.py:8: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.\cf1\highlight2 
+\par \cf0\highlight0   import pkg_resources\cf1\highlight2 
+\par \cf0\highlight0 ++++++++++++++++++++++++patch_vllm_distributed++++++++++++++++++++++++++\cf1\highlight2 
+\par \cf0\highlight0 +++++++++++++++++++++++patch_rope+++++++++++++++++++++++++++\cf1\highlight2 
+\par \cf0\highlight0 ++++++++++++++++++++++patch_sampler++++++++++++++++++++++++++++\cf1\highlight2 
+\par \cf0\highlight0 +++++++++++++++++++++++patch_compilation+++++++++++++++++++++++++++\cf1\highlight2 
+\par \cf0\highlight0 ++++++++++++++++++++++patch_pangu++++++++++++++++++++++++++++\cf1\highlight2 
+\par \cf0\highlight0 +++++++ patch_enable_max_token_exclude_reasoning ++++++++\cf1\highlight2 
+\par \cf0\highlight0 INFO 10-24 17:54:39 [config.py:1909] Disabled the custom all-reduce kernel because it is not supported on current platform.\cf1\highlight2 
+\par \cf0\highlight0 INFO 10-24 17:54:39 [config.py:1909] Disabled the custom all-reduce kernel because it is not supported on current platform.\cf1\highlight2 
+\par \cf0\highlight0 INFO 10-24 17:54:39 [api_server.py:1370] vLLM API server version 0.9.0\cf1\highlight2 
+\par \cf0\highlight0 INFO 10-24 17:54:40 [config.py:1909] Disabled the custom all-reduce kernel because it is not supported on current platform.\cf1\highlight2 
+\par \cf0\highlight0 INFO 10-24 17:54:40 [cli_args.py:300] non-default args: \{'port': 9000, 'trust_remote_code': True, 'dtype': 'bfloat16', 'max_model_len': 128, 'enforce_eager': True, 'served_model_name': ['deepseek'], 'distributed_executor_backend': 'ray', 'tensor_parallel_size': 32, 'data_parallel_size_local': 1, 'data_parallel_address': '7.150.8.102', 'data_parallel_rpc_port': 7000, 'enable_expert_parallel': True, 'block_size': 128, 'gpu_memory_utilization': 0.88, 'enable_prefix_caching': False, 'max_num_batched_tokens': 128, 'max_num_seqs': 4, 'enable_chunked_prefill': False, 'kv_transfer_config': KVTransferConfig(kv_connector='AscendHcclConnectorV1', engine_id=0, kv_buffer_device='npu', kv_buffer_size=1000000000.0, kv_role='kv_producer', kv_rank=0, kv_parallel_size=2, kv_ip='127.0.0.1', kv_port=14579, kv_connector_extra_config=\{\}, kv_connector_module_path=None), 'disable_log_requests': True\}\cf1\highlight2 
+\par \cf0\highlight0 INFO 10-24 17:54:40 [config.py:3131] Downcasting torch.float32 to torch.bfloat16.\cf1\highlight2 
+\par \cf0\highlight0 INFO 10-24 17:54:48 [config.py:793] This model supports multiple tasks: \{'classify', 'embed', 'generate', 'reward', 'score'\}. Defaulting to 'generate'.\cf1\highlight2 
+\par \cf0\highlight0 WARNING 10-24 17:54:48 [arg_utils.py:1596] Detected VLLM_USE_V1=1 with npu. Usage should be considered experimental. Please report any issues on Github.\cf1\highlight2 
+\par \cf0\highlight0 INFO 10-24 17:54:48 [config.py:1909] Disabled the custom all-reduce kernel because it is not supported on current platform.\cf1\highlight2 
+\par \cf0\highlight0 INFO 10-24 17:54:48 [config.py:2118] Chunked prefill is enabled with max_num_batched_tokens=128.\cf1\highlight2 
+\par \cf0\highlight0 INFO 10-24 17:54:48 [core.py:561] Waiting for init message from front-end.\cf1\highlight2 
+\par \cf0\highlight0 INFO 10-24 17:54:48 [core.py:69] Initializing a V1 LLM engine (v0.9.0) with config: model='/data/models/LongCat-Flash', speculative_config=None, tokenizer='/data/models/LongCat-Flash', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, override_neuron_config=\{\}, tokenizer_revision=None, trust_remote_code=True, dtype=torch.bfloat16, max_seq_len=128, download_dir=None, load_format=LoadFormat.AUTO, tensor_parallel_size=32, pipeline_parallel_size=1, disable_custom_all_reduce=True, quantization=None, enforce_eager=True, kv_cache_dtype=auto,  device_config=npu, decoding_config=DecodingConfig(backend='auto', disable_fallback=False, disable_any_whitespace=False, disable_additional_properties=False, reasoning_backend=''), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None), seed=0, served_model_name=deepseek, num_scheduler_steps=1, multi_step_stream_outputs=True, enable_prefix_caching=False, chunked_prefill_enabled=True, use_async_output_proc=True, pooler_config=None, compilation_config=\{"custom_ops": ["all"], "compile_sizes": [], "cudagraph_capture_sizes": [], "max_capture_size": 0\}\cf1\highlight2 
+\par \cf0\highlight0 2025-10-24 17:54:48,468 INFO worker.py:1747 -- Connecting to existing Ray cluster at address: 7.150.8.102:6379...\cf1\highlight2 
+\par \cf0\highlight0 2025-10-24 17:54:48,477 INFO worker.py:1927 -- Connected to Ray cluster.\cf1\highlight2 
+\par \cf0\highlight0 INFO 10-24 17:54:52 [ray_utils.py:333] No current placement group found. Creating a new placement group.\cf1\highlight2 
+\par \cf0\highlight0 WARNING 10-24 17:54:52 [utils.py:578] The environment variable HOST_IP is deprecated and ignored, as it is often used by Docker and other software to interact with the container's network stack. Please use VLLM_HOST_IP instead to set the IP address for vLLM processes to communicate with each other.\cf1\highlight2 
+\par \cf0\highlight0 WARNING 10-24 17:54:52 [ray_utils.py:197] tensor_parallel_size=32 is bigger than a reserved number of NPUs (16 NPUs) in a node 68a2b0574420a0c218ebdc40fb4fac335d84e88b27f626e9647a9646. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 32 GPUs available at each node.\cf1\highlight2 
+\par \cf0\highlight0 WARNING 10-24 17:54:52 [ray_utils.py:197] tensor_parallel_size=32 is bigger than a reserved number of NPUs (16 NPUs) in a node 5f154b6e43fb4032711481e6c200be5567ef6e1dea19cf85c802a416. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 32 GPUs available at each node.\cf1\highlight2 
+\par \cf0\highlight0 INFO 10-24 17:54:52 [ray_distributed_executor.py:176] use_ray_spmd_worker: True\cf1\highlight2 
+\par \cf0\highlight0 WARNING 10-24 17:54:52 [utils.py:578] The environment variable HOST_IP is deprecated and ignored, as it is often used by Docker and other software to interact with the container's network stack. Please use VLLM_HOST_IP instead to set the IP address for vLLM processes to communicate with each other.\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209391)\cf0  /usr/local/lib/python3.11/site-packages/torch_npu/dynamo/torchair/__init__.py:8: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209391)\cf0    import pkg_resources\cf1\highlight2 
+\par \cf3\highlight0 (pid=209391)\cf0  INFO 10-24 17:54:55 [importing.py:16] Triton not installed or not compatible; certain GPU-related functions will not be available.\cf1\highlight2 
+\par \cf3\highlight0 (pid=209391)\cf0  WARNING 10-24 17:54:55 [importing.py:28] Triton is not installed. Using dummy decorators. Install it via `pip install triton` to enable kernel compilation.\cf1\highlight2 
+\par \cf3\highlight0 (pid=209391)\cf0  INFO 10-24 17:54:56 [__init__.py:31] Available plugins for group vllm.platform_plugins:\cf1\highlight2 
+\par \cf3\highlight0 (pid=209391)\cf0  INFO 10-24 17:54:56 [__init__.py:33] - npu -> omni.adaptors.vllm.platform:register\cf1\highlight2 
+\par \cf3\highlight0 (pid=209391)\cf0  INFO 10-24 17:54:56 [__init__.py:36] All plugins in this group will be loaded. Set `VLLM_PLUGINS` to control which plugins to load.\cf1\highlight2 
+\par \cf3\highlight0 (pid=209391)\cf0  INFO 10-24 17:54:56 [__init__.py:234] Platform plugin npu is activated\cf1\highlight2 
+\par \cf3\highlight0 (pid=209391)\cf0  WARNING 10-24 17:54:57 [_custom_ops.py:21] Failed to import from vllm._C with ModuleNotFoundError("No module named 'vllm._C'")\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209391)\cf0  WARNING 10-24 17:54:59 [utils.py:578] The environment variable HOST_IP is deprecated and ignored, as it is often used by Docker and other software to interact with the container's network stack. Please use VLLM_HOST_IP instead to set the IP address for vLLM processes to communicate with each other.\cf1\highlight2 
+\par \cf3\highlight0 (pid=76192, ip=7.150.15.197)\cf0  INFO 10-24 17:54:57 [importing.py:16] Triton not installed or not compatible; certain GPU-related functions will not be available.\cf4  [repeated 31x across cluster] (Ray deduplicates logs by default. Set RAY_DEDUP_LOGS=0 to disable log deduplication, or see https://docs.ray.io/en/master/ray-observability/user-guides/configure-logging.html#log-deduplication for more options.)\cf1\highlight2 
+\par \cf3\highlight0 (pid=76192, ip=7.150.15.197)\cf0  WARNING 10-24 17:54:57 [importing.py:28] Triton is not installed. Using dummy decorators. Install it via `pip install triton` to enable kernel compilation.\cf4  [repeated 31x across cluster]\cf1\highlight2 
+\par \cf0\highlight0 INFO 10-24 17:55:01 [ray_distributed_executor.py:352] non_carry_over_env_vars from config: set()\cf1\highlight2 
+\par \cf0\highlight0 INFO 10-24 17:55:01 [ray_distributed_executor.py:354] Copying the following environment variables to workers: ['LD_LIBRARY_PATH', 'VLLM_LOGGING_LEVEL', 'VLLM_USE_RAY_SPMD_WORKER', 'VLLM_USE_RAY_COMPILED_DAG', 'VLLM_WORKER_MULTIPROC_METHOD', 'VLLM_USE_V1', 'VLLM_DP_RANK', 'VLLM_DP_RANK_LOCAL', 'VLLM_DP_SIZE', 'VLLM_DP_MASTER_IP', 'VLLM_DP_MASTER_PORT']\cf1\highlight2 
+\par \cf0\highlight0 INFO 10-24 17:55:01 [ray_distributed_executor.py:357] If certain env vars should NOT be copied to workers, add them to /root/.config/vllm/ray_non_carry_over_env_vars.json file\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=76183, ip=7.150.15.197)\cf0  INFO 10-24 17:55:01 [__init__.py:31] Available plugins for group vllm.general_plugins:\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=76183, ip=7.150.15.197)\cf0  INFO 10-24 17:55:01 [__init__.py:33] - kv_connectors -> omni.accelerators.pd:register\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=76183, ip=7.150.15.197)\cf0  INFO 10-24 17:55:01 [__init__.py:33] - npu_optimized_models -> omni.models:register_model\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=76183, ip=7.150.15.197)\cf0  INFO 10-24 17:55:01 [__init__.py:33] - reasoning -> omni.adaptors.vllm.reasoning:register_reasoning\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=76183, ip=7.150.15.197)\cf0  INFO 10-24 17:55:01 [__init__.py:33] - tool_parsers -> omni.adaptors.vllm.entrypoints.openai.tool_parsers:register_tool\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=76183, ip=7.150.15.197)\cf0  INFO 10-24 17:55:01 [__init__.py:33] - lora_filesystem_resolver -> vllm.plugins.lora_resolvers.filesystem_resolver:register_filesystem_resolver\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=76185, ip=7.150.15.197)\cf0  WARNING 10-24 17:55:01 [registry.py:397] Model architecture DeepseekV2ForCausalLM is already registered, and will be overwritten by the new model class omni.models.deepseek.deepseek_v2:CustomDeepseekV2ForCausalLM.\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=76185, ip=7.150.15.197)\cf0  WARNING 10-24 17:55:01 [registry.py:397] Model architecture DeepseekV3ForCausalLM is already registered, and will be overwritten by the new model class omni.models.deepseek.deepseek_v3:DeepseekV3ForCausalLM.\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=76185, ip=7.150.15.197)\cf0  WARNING 10-24 17:55:01 [registry.py:397] Model architecture DeepSeekMTPModel is already registered, and will be overwritten by the new model class omni.models.deepseek.deepseek_mtp:DeepseekV3MTP.\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=76185, ip=7.150.15.197)\cf0  WARNING 10-24 17:55:01 [registry.py:397] Model architecture Qwen2ForCausalLM is already registered, and will be overwritten by the new model class omni.models.qwen.qwen2:Qwen2ForCausalLM.\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=76185, ip=7.150.15.197)\cf0  WARNING 10-24 17:55:01 [registry.py:397] Model architecture Qwen3ForCausalLM is already registered, and will be overwritten by the new model class omni.models.qwen.qwen3:Qwen3ForCausalLM.\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=76185, ip=7.150.15.197)\cf0  WARNING 10-24 17:55:01 [registry.py:397] Model architecture Qwen3MoeForCausalLM is already registered, and will be overwritten by the new model class omni.models.qwen.qwen3_moe:Qwen3MoeForCausalLM.\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=76185, ip=7.150.15.197)\cf0  WARNING 10-24 17:55:01 [registry.py:397] Model architecture LlamaForCausalLM is already registered, and will be overwritten by the new model class omni.models.llama.llama:LlamaForCausalLM.\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=76185, ip=7.150.15.197)\cf0  WARNING 10-24 17:55:01 [registry.py:397] Model architecture Qwen2_5_VLForConditionalGeneration is already registered, and will be overwritten by the new model class omni.models.qwen.qwen2_5_vl:Qwen2_5_VLForConditionalGeneration.\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=76185, ip=7.150.15.197)\cf0  WARNING 10-24 17:55:01 [registry.py:397] Model architecture Qwen2VLForConditionalGeneration is already registered, and will be overwritten by the new model class omni.models.qwen.qwen2_vl:Qwen2VLForConditionalGeneration.\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=76185, ip=7.150.15.197)\cf0  WARNING 10-24 17:55:01 [registry.py:397] Model architecture InternLM2ForCausalLM is already registered, and will be overwritten by the new model class omni.models.internvl.internlm2:InternLM2ForCausalLM.\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=76185, ip=7.150.15.197)\cf0  WARNING 10-24 17:55:01 [registry.py:397] Model architecture InternVLChatModel is already registered, and will be overwritten by the new model class omni.models.internvl.internvl:InternVLChatModel.\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=76185, ip=7.150.15.197)\cf0  WARNING 10-24 17:55:01 [registry.py:397] Model architecture Gemma3ForCausalLM is already registered, and will be overwritten by the new model class omni.models.gemma.gemma3:Gemma3ForCausalLM.\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=76185, ip=7.150.15.197)\cf0  WARNING 10-24 17:55:01 [registry.py:397] Model architecture Gemma3ForConditionalGeneration is already registered, and will be overwritten by the new model class omni.models.gemma.gemma3_mm:Gemma3ForConditionalGeneration.\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209391)\cf0  ++++++++++++++++++++++++patch_vllm_distributed++++++++++++++++++++++++++\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209391)\cf0  +++++++++++++++++++++++patch_rope+++++++++++++++++++++++++++\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209391)\cf0  ++++++++++++++++++++++patch_sampler++++++++++++++++++++++++++++\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209391)\cf0  +++++++++++++++++++++++patch_compilation+++++++++++++++++++++++++++\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209391)\cf0  ++++++++++++++++++++++patch_pangu++++++++++++++++++++++++++++\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209391)\cf0  +++++++ patch_enable_max_token_exclude_reasoning ++++++++\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209391)\cf0  WARNING 10-24 17:55:01 [utils.py:2671] Methods determine_num_available_blocks,device_config,get_cache_block_size_bytes not implemented in <omni.adaptors.vllm.worker.npu_worker.NPUWorker object at 0xffcfb33f1ed0>\cf1\highlight2 
+\par \cf3\highlight0 (pid=76455, ip=7.150.15.197)\cf0  INFO 10-24 17:54:57 [__init__.py:31] Available plugins for group vllm.platform_plugins:\cf4  [repeated 31x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (pid=76455, ip=7.150.15.197)\cf0  INFO 10-24 17:54:57 [__init__.py:33] - npu -> omni.adaptors.vllm.platform:register\cf4  [repeated 31x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209447)\cf0  INFO 10-24 17:55:01 [__init__.py:36] All plugins in this group will be loaded. Set `VLLM_PLUGINS` to control which plugins to load.\cf4  [repeated 63x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (pid=76192, ip=7.150.15.197)\cf0  INFO 10-24 17:54:57 [__init__.py:234] Platform plugin npu is activated\cf4  [repeated 31x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209391)\cf0  INFO 10-24 17:55:06 [loader.py:312] hardware_platform loads from vllm config: A3\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209391)\cf0  INFO 10-24 17:55:06 [loader.py:312] is_pd_disaggregation loads from vllm config: True\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209391)\cf0  INFO 10-24 17:55:06 [loader.py:312] is_prefill_node loads from vllm config: True\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209391)\cf0  INFO 10-24 17:55:06 [loader.py:312] prefill_nodes_num loads from vllm config: 1\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209391)\cf0  INFO 10-24 17:55:06 [loader.py:312] decode_nodes_num loads from vllm config: 1\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209391)\cf0  INFO 10-24 17:55:06 [loader.py:312] enable_chunked_prefill loads from vllm config: True\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209391)\cf0  INFO 10-24 17:55:06 [loader.py:312] enable_omni_placement loads from vllm config: False\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209391)\cf0  INFO 10-24 17:55:06 [loader.py:312] decode_gear_list loads from vllm config: [4]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209391)\cf0  INFO 10-24 17:55:06 [loader.py:312] enable_graph_mode loads from vllm config: False\cf1\highlight2 
+\par \cf3\highlight0 (pid=76184, ip=7.150.15.197)\cf0  WARNING 10-24 17:54:59 [_custom_ops.py:21] Failed to import from vllm._C with ModuleNotFoundError("No module named 'vllm._C'")\cf4  [repeated 31x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=76184, ip=7.150.15.197)\cf0  WARNING 10-24 17:55:01 [utils.py:578] The environment variable HOST_IP is deprecated and ignored, as it is often used by Docker and other software to interact with the container's network stack. Please use VLLM_HOST_IP instead to set the IP address for vLLM processes to communicate with each other.\cf4  [repeated 31x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209391)\cf0  INFO 10-24 17:55:06 [loader.py:265] The task about longcat-flash_bf16_A3 load configuration file from /data/00943438/run_dir/omniinfer/omni/models/configs/longcat_prefill_bf16_1p1d.json\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209447)\cf0  INFO 10-24 17:55:01 [__init__.py:31] Available plugins for group vllm.general_plugins:\cf4  [repeated 31x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209447)\cf0  INFO 10-24 17:55:01 [__init__.py:33] - kv_connectors -> omni.accelerators.pd:register\cf4  [repeated 31x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209447)\cf0  INFO 10-24 17:55:01 [__init__.py:33] - npu_optimized_models -> omni.models:register_model\cf4  [repeated 31x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209447)\cf0  INFO 10-24 17:55:01 [__init__.py:33] - reasoning -> omni.adaptors.vllm.reasoning:register_reasoning\cf4  [repeated 31x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209447)\cf0  INFO 10-24 17:55:01 [__init__.py:33] - tool_parsers -> omni.adaptors.vllm.entrypoints.openai.tool_parsers:register_tool\cf4  [repeated 31x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209447)\cf0  INFO 10-24 17:55:01 [__init__.py:33] - lora_filesystem_resolver -> vllm.plugins.lora_resolvers.filesystem_resolver:register_filesystem_resolver\cf4  [repeated 31x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209391)\cf0  WARNING 10-24 17:55:06 [loader.py:299] [WARNING] Eager mode disables all these optimization configurations by default.\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209391)\cf0  INFO 10-24 17:55:06 [loader.py:31] Task config updated via 'update_task_config'\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209447)\cf0  WARNING 10-24 17:55:01 [registry.py:397] Model architecture Gemma3ForConditionalGeneration is already registered, and will be overwritten by the new model class omni.models.gemma.gemma3_mm:Gemma3ForConditionalGeneration.\cf4  [repeated 310x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209447)\cf0  WARNING 10-24 17:55:01 [registry.py:397] Model architecture DeepSeekMTPModel is already registered, and will be overwritten by the new model class omni.models.deepseek.deepseek_mtp:DeepseekV3MTP.\cf4  [repeated 31x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209447)\cf0  WARNING 10-24 17:55:01 [registry.py:397] Model architecture LlamaForCausalLM is already registered, and will be overwritten by the new model class omni.models.llama.llama:LlamaForCausalLM.\cf4  [repeated 31x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209447)\cf0  WARNING 10-24 17:55:01 [registry.py:397] Model architecture InternVLChatModel is already registered, and will be overwritten by the new model class omni.models.internvl.internvl:InternVLChatModel.\cf4  [repeated 31x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=76455, ip=7.150.15.197)\cf0  ++++++++++++++++++++++++patch_vllm_distributed++++++++++++++++++++++++++\cf4  [repeated 31x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=76455, ip=7.150.15.197)\cf0  +++++++++++++++++++++++patch_rope+++++++++++++++++++++++++++\cf4  [repeated 31x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=76455, ip=7.150.15.197)\cf0  ++++++++++++++++++++++patch_sampler++++++++++++++++++++++++++++\cf4  [repeated 31x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=76455, ip=7.150.15.197)\cf0  +++++++++++++++++++++++patch_compilation+++++++++++++++++++++++++++\cf4  [repeated 31x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=76455, ip=7.150.15.197)\cf0  ++++++++++++++++++++++patch_pangu++++++++++++++++++++++++++++\cf4  [repeated 31x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=76455, ip=7.150.15.197)\cf0  +++++++ patch_enable_max_token_exclude_reasoning ++++++++\cf4  [repeated 31x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=76455, ip=7.150.15.197)\cf0  WARNING 10-24 17:55:01 [utils.py:2671] Methods determine_num_available_blocks,device_config,get_cache_block_size_bytes not implemented in <omni.adaptors.vllm.worker.npu_worker.NPUWorker object at 0xffcfafce3b10>\cf4  [repeated 31x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209373)\cf0  INFO 10-24 17:55:11 [loader.py:312] hardware_platform loads from vllm config: A3\cf4  [repeated 24x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209373)\cf0  INFO 10-24 17:55:11 [loader.py:312] is_pd_disaggregation loads from vllm config: True\cf4  [repeated 24x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209373)\cf0  INFO 10-24 17:55:11 [loader.py:312] is_prefill_node loads from vllm config: True\cf4  [repeated 24x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209373)\cf0  INFO 10-24 17:55:11 [loader.py:312] prefill_nodes_num loads from vllm config: 1\cf4  [repeated 24x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209373)\cf0  INFO 10-24 17:55:11 [loader.py:312] decode_nodes_num loads from vllm config: 1\cf4  [repeated 24x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209373)\cf0  INFO 10-24 17:55:11 [loader.py:312] enable_chunked_prefill loads from vllm config: True\cf4  [repeated 24x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209373)\cf0  INFO 10-24 17:55:11 [loader.py:312] enable_omni_placement loads from vllm config: False\cf4  [repeated 24x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209373)\cf0  INFO 10-24 17:55:11 [loader.py:312] decode_gear_list loads from vllm config: [4]\cf4  [repeated 24x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209373)\cf0  INFO 10-24 17:55:11 [loader.py:312] enable_graph_mode loads from vllm config: False\cf4  [repeated 24x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209373)\cf0  INFO 10-24 17:55:11 [loader.py:265] The task about longcat-flash_bf16_A3 load configuration file from /data/00943438/run_dir/omniinfer/omni/models/configs/longcat_prefill_bf16_1p1d.json\cf4  [repeated 24x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209373)\cf0  WARNING 10-24 17:55:11 [loader.py:299] [WARNING] Eager mode disables all these optimization configurations by default.\cf4  [repeated 24x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209373)\cf0  INFO 10-24 17:55:11 [loader.py:31] Task config updated via 'update_task_config'\cf4  [repeated 24x across cluster]\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209391)\cf0  WARNING 10-24 17:55:12 [utils.py:578] The environment variable HOST_IP is deprecated and ignored, as it is often used by Docker and other software to interact with the container's network stack. Please use VLLM_HOST_IP instead to set the IP address for vLLM processes to communicate with each other.\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209391)\cf0  INFO 10-24 17:55:12 [shm_broadcast.py:250] vLLM message queue communication handle: Handle(local_reader_ranks=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], buffer_handle=(15, 4194304, 6, 'psm_4394c255'), local_subscribe_addr='ipc:///tmp/8c70462a-8d05-4dd8-9ef7-684449f2c49d', remote_subscribe_addr='tcp://7.150.8.102:50085', remote_addr_ipv6=False)\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209391)\cf0  INFO 10-24 17:55:12 [parallel_state.py:1064] rank 0 in world size 32 is assigned as DP rank 0, PP rank 0, TP rank 0, EP rank 0\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209391)\cf0  INFO 10-24 17:55:12 [shm_broadcast.py:250] vLLM message queue communication handle: Handle(local_reader_ranks=[1, 2, 3], buffer_handle=(3, 4194304, 6, 'psm_fa6280bb'), local_subscribe_addr='ipc:///tmp/ae46ea46-808e-4452-b6a0-6c6415ae80b1', remote_subscribe_addr=None, remote_addr_ipv6=False)\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209391)\cf0  INFO 10-24 17:55:12 [shm_broadcast.py:250] vLLM message queue communication handle: Handle(local_reader_ranks=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], buffer_handle=(15, 4194304, 6, 'psm_3c4bc795'), local_subscribe_addr='ipc:///tmp/ca3fcdc8-9571-4fdb-a0c3-f51d30e5c643', remote_subscribe_addr=None, remote_addr_ipv6=False)\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209391)\cf0  INFO 10-24 17:55:12 [factory.py:73] Creating v1 connector with name: AscendHcclConnectorV1\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209391)\cf0  INFO 10-24 17:55:12 [llmdatadist_connector_v1.py:114] Set kv_parallel_size to 1 when use deepseek mla model.\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=209391)\cf0  INFO 10-24 17:55:12 [llmdatadist_connector_v1.py:287] ConnectWorker bind tcp://7.150.8.102:5568\cf1\highlight2 
+\par \cf3\highlight0 (RayWorkerWrapper pid=76183, ip=7.150.15.197)\cf0  INFO 10-24 17:55:12 [npu_model_runner.py:1024] Starting to load model /data/models/LongCat-Flash...\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623] EngineCore failed to start.\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623] Traceback (most recent call last):\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/v1/engine/core.py", line 614, in run_engine_core\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]     engine_core = EngineCoreProc(*args, **kwargs)\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/v1/engine/core.py", line 506, in __init__\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]     super().__init__(vllm_config, executor_class, log_stats,\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/v1/engine/core.py", line 83, in __init__\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]     self.model_executor = executor_class(vllm_config)\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/executor/executor_base.py", line 286, in __init__\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]     super().__init__(*args, **kwargs)\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/executor/executor_base.py", line 52, in __init__\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]     self._init_executor()\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/executor/ray_distributed_executor.py", line 114, in _init_executor\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]     self._init_workers_ray(placement_group)\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/executor/ray_distributed_executor.py", line 396, in _init_workers_ray\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]     self._run_workers("load_model",\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/executor/ray_distributed_executor.py", line 521, in _run_workers\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]     ray_worker_outputs = ray.get(ray_worker_outputs)\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]   File "/usr/local/lib/python3.11/site-packages/ray/_private/auto_init_hook.py", line 22, in auto_init_wrapper\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]     return fn(*args, **kwargs)\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]            ^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]   File "/usr/local/lib/python3.11/site-packages/ray/_private/client_mode_hook.py", line 104, in wrapper\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]     return func(*args, **kwargs)\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]            ^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]   File "/usr/local/lib/python3.11/site-packages/ray/_private/worker.py", line 2858, in get\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]     values, debugger_breakpoint = worker.get_objects(object_refs, timeout=timeout)\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]   File "/usr/local/lib/python3.11/site-packages/ray/_private/worker.py", line 958, in get_objects\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]     raise value.as_instanceof_cause()\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623] ray.exceptions.RayTaskError(ValueError): \cf3 ray::RayWorkerWrapper.execute_method()\cf0  (pid=209391, ip=7.150.8.102, actor_id=2ab03b0b025e8c2c06c4cec601000000, repr=<vllm.executor.ray_utils.RayWorkerWrapper object at 0xffff8ba80150>)\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/worker/worker_base.py", line 621, in execute_method\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]     raise e\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/worker/worker_base.py", line 612, in execute_method\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]     return run_method(self, method, args, kwargs)\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/utils.py", line 2605, in run_method\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]     return func(*args, **kwargs)\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]            ^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]   File "/data/00943438/run_dir/omniinfer/omni/adaptors/vllm/worker/npu_worker.py", line 342, in load_model\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]     self.model_runner.load_model()\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]   File "/data/00943438/run_dir/omniinfer/omni/adaptors/vllm/worker/npu_model_runner.py", line 1027, in load_model\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]     self.model = get_model(vllm_config=self.vllm_config)\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/model_executor/model_loader/__init__.py", line 58, in get_model\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]     return loader.load_model(vllm_config=vllm_config,\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/model_executor/model_loader/default_loader.py", line 273, in load_model\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]     model = initialize_model(vllm_config=vllm_config,\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/model_executor/model_loader/utils.py", line 61, in initialize_model\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]     return model_class(vllm_config=vllm_config, prefix=prefix)\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]   File "/data/00943438/run_dir/omniinfer/omni/adaptors/vllm/compilation/decorators.py", line 29, in __init__\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]     old_init(self, vllm_config=vllm_config, prefix=prefix, **kwargs)\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]   File "/data/00943438/run_dir/omniinfer/omni/models/longcat/longcat_flash.py", line 311, in __init__\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]     self.model = LongcatFlashModel(vllm_config=vllm_config, prefix="model")\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]   File "/data/00943438/run_dir/omniinfer/omni/models/longcat/longcat_flash.py", line 238, in __init__\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]     self.start_layer, self.end_layer, self.layers = make_layers(\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]                                                     ^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/model_executor/models/utils.py", line 625, in make_layers\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]     [PPMissingLayer() for _ in range(start_layer)] + [\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]                                                      ^\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/model_executor/models/utils.py", line 626, in <listcomp>\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]     maybe_offload_to_cpu(layer_fn(prefix=f"\{prefix\}.\{idx\}"))\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]   File "/data/00943438/run_dir/omniinfer/omni/models/longcat/longcat_flash.py", line 240, in <lambda>\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]     lambda prefix: LongcatFlashDecoderLayer(\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]                    ^^^^^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]   File "/data/00943438/run_dir/omniinfer/omni/models/longcat/longcat_flash.py", line 144, in __init__\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]     self.mlp = LongcatFlashMoE(\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]                ^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]   File "/data/00943438/run_dir/omniinfer/omni/models/longcat/longcat_moe.py", line 216, in __init__\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]     self.experts = FusedMoE(\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]                    ^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]   File "/data/00943438/run_dir/omniinfer/omni/models/longcat/longcat_fused_moe.py", line 247, in __init__\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623]     raise ValueError("Only softmax scoring function is supported for "\cf1\highlight2 
+\par \cf0\highlight0 ERROR 10-24 17:55:13 [core.py:623] ValueError: Only softmax scoring function is supported for non-grouped topk.\cf1\highlight2 
+\par \cf0\highlight0 Process EngineCore_0:\cf1\highlight2 
+\par \cf0\highlight0 Traceback (most recent call last):\cf1\highlight2 
+\par \cf0\highlight0   File "/usr/local/lib/python3.11/multiprocessing/process.py", line 314, in _bootstrap\cf1\highlight2 
+\par \cf0\highlight0     self.run()\cf1\highlight2 
+\par \cf0\highlight0   File "/usr/local/lib/python3.11/multiprocessing/process.py", line 108, in run\cf1\highlight2 
+\par \cf0\highlight0     self._target(*self._args, **self._kwargs)\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/v1/engine/core.py", line 627, in run_engine_core\cf1\highlight2 
+\par \cf0\highlight0     raise e\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/v1/engine/core.py", line 614, in run_engine_core\cf1\highlight2 
+\par \cf0\highlight0     engine_core = EngineCoreProc(*args, **kwargs)\cf1\highlight2 
+\par \cf0\highlight0                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/v1/engine/core.py", line 506, in __init__\cf1\highlight2 
+\par \cf0\highlight0     super().__init__(vllm_config, executor_class, log_stats,\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/v1/engine/core.py", line 83, in __init__\cf1\highlight2 
+\par \cf0\highlight0     self.model_executor = executor_class(vllm_config)\cf1\highlight2 
+\par \cf0\highlight0                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/executor/executor_base.py", line 286, in __init__\cf1\highlight2 
+\par \cf0\highlight0     super().__init__(*args, **kwargs)\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/executor/executor_base.py", line 52, in __init__\cf1\highlight2 
+\par \cf0\highlight0     self._init_executor()\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/executor/ray_distributed_executor.py", line 114, in _init_executor\cf1\highlight2 
+\par \cf0\highlight0     self._init_workers_ray(placement_group)\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/executor/ray_distributed_executor.py", line 396, in _init_workers_ray\cf1\highlight2 
+\par \cf0\highlight0     self._run_workers("load_model",\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/executor/ray_distributed_executor.py", line 521, in _run_workers\cf1\highlight2 
+\par \cf0\highlight0     ray_worker_outputs = ray.get(ray_worker_outputs)\cf1\highlight2 
+\par \cf0\highlight0                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0   File "/usr/local/lib/python3.11/site-packages/ray/_private/auto_init_hook.py", line 22, in auto_init_wrapper\cf1\highlight2 
+\par \cf0\highlight0     return fn(*args, **kwargs)\cf1\highlight2 
+\par \cf0\highlight0            ^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0   File "/usr/local/lib/python3.11/site-packages/ray/_private/client_mode_hook.py", line 104, in wrapper\cf1\highlight2 
+\par \cf0\highlight0     return func(*args, **kwargs)\cf1\highlight2 
+\par \cf0\highlight0            ^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0   File "/usr/local/lib/python3.11/site-packages/ray/_private/worker.py", line 2858, in get\cf1\highlight2 
+\par \cf0\highlight0     values, debugger_breakpoint = worker.get_objects(object_refs, timeout=timeout)\cf1\highlight2 
+\par \cf0\highlight0                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0   File "/usr/local/lib/python3.11/site-packages/ray/_private/worker.py", line 958, in get_objects\cf1\highlight2 
+\par \cf0\highlight0     raise value.as_instanceof_cause()\cf1\highlight2 
+\par \cf0\highlight0 ray.exceptions.RayTaskError(ValueError): \cf3 ray::RayWorkerWrapper.execute_method()\cf0  (pid=209391, ip=7.150.8.102, actor_id=2ab03b0b025e8c2c06c4cec601000000, repr=<vllm.executor.ray_utils.RayWorkerWrapper object at 0xffff8ba80150>)\cf1\highlight2 
+\par \cf0\highlight0            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/worker/worker_base.py", line 621, in execute_method\cf1\highlight2 
+\par \cf0\highlight0     raise e\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/worker/worker_base.py", line 612, in execute_method\cf1\highlight2 
+\par \cf0\highlight0     return run_method(self, method, args, kwargs)\cf1\highlight2 
+\par \cf0\highlight0            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/utils.py", line 2605, in run_method\cf1\highlight2 
+\par \cf0\highlight0     return func(*args, **kwargs)\cf1\highlight2 
+\par \cf0\highlight0            ^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/omni/adaptors/vllm/worker/npu_worker.py", line 342, in load_model\cf1\highlight2 
+\par \cf0\highlight0     self.model_runner.load_model()\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/omni/adaptors/vllm/worker/npu_model_runner.py", line 1027, in load_model\cf1\highlight2 
+\par \cf0\highlight0     self.model = get_model(vllm_config=self.vllm_config)\cf1\highlight2 
+\par \cf0\highlight0                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/model_executor/model_loader/__init__.py", line 58, in get_model\cf1\highlight2 
+\par \cf0\highlight0     return loader.load_model(vllm_config=vllm_config,\cf1\highlight2 
+\par \cf0\highlight0            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/model_executor/model_loader/default_loader.py", line 273, in load_model\cf1\highlight2 
+\par \cf0\highlight0     model = initialize_model(vllm_config=vllm_config,\cf1\highlight2 
+\par \cf0\highlight0             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/model_executor/model_loader/utils.py", line 61, in initialize_model\cf1\highlight2 
+\par \cf0\highlight0     return model_class(vllm_config=vllm_config, prefix=prefix)\cf1\highlight2 
+\par \cf0\highlight0            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/omni/adaptors/vllm/compilation/decorators.py", line 29, in __init__\cf1\highlight2 
+\par \cf0\highlight0     old_init(self, vllm_config=vllm_config, prefix=prefix, **kwargs)\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/omni/models/longcat/longcat_flash.py", line 311, in __init__\cf1\highlight2 
+\par \cf0\highlight0     self.model = LongcatFlashModel(vllm_config=vllm_config, prefix="model")\cf1\highlight2 
+\par \cf0\highlight0                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/omni/models/longcat/longcat_flash.py", line 238, in __init__\cf1\highlight2 
+\par \cf0\highlight0     self.start_layer, self.end_layer, self.layers = make_layers(\cf1\highlight2 
+\par \cf0\highlight0                                                     ^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/model_executor/models/utils.py", line 625, in make_layers\cf1\highlight2 
+\par \cf0\highlight0     [PPMissingLayer() for _ in range(start_layer)] + [\cf1\highlight2 
+\par \cf0\highlight0                                                      ^\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/model_executor/models/utils.py", line 626, in <listcomp>\cf1\highlight2 
+\par \cf0\highlight0     maybe_offload_to_cpu(layer_fn(prefix=f"\{prefix\}.\{idx\}"))\cf1\highlight2 
+\par \cf0\highlight0                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/omni/models/longcat/longcat_flash.py", line 240, in <lambda>\cf1\highlight2 
+\par \cf0\highlight0     lambda prefix: LongcatFlashDecoderLayer(\cf1\highlight2 
+\par \cf0\highlight0                    ^^^^^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/omni/models/longcat/longcat_flash.py", line 144, in __init__\cf1\highlight2 
+\par \cf0\highlight0     self.mlp = LongcatFlashMoE(\cf1\highlight2 
+\par \cf0\highlight0                ^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/omni/models/longcat/longcat_moe.py", line 216, in __init__\cf1\highlight2 
+\par \cf0\highlight0     self.experts = FusedMoE(\cf1\highlight2 
+\par \cf0\highlight0                    ^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/omni/models/longcat/longcat_fused_moe.py", line 247, in __init__\cf1\highlight2 
+\par \cf0\highlight0     raise ValueError("Only softmax scoring function is supported for "\cf1\highlight2 
+\par \cf0\highlight0 ValueError: Only softmax scoring function is supported for non-grouped topk.\cf1\highlight2 
+\par \cf0\highlight0 INFO 10-24 17:55:13 [ray_distributed_executor.py:127] Shutting down Ray distributed executor. If you see error log from logging.cc regarding SIGTERM received, please ignore because this is the expected termination process in Ray.\cf1\highlight2 
+\par \cf0\highlight0 Traceback (most recent call last):\cf1\highlight2 
+\par \cf0\highlight0   File "/usr/local/bin/vllm", line 8, in <module>\cf1\highlight2 
+\par \cf0\highlight0     sys.exit(main())\cf1\highlight2 
+\par \cf0\highlight0              ^^^^^^\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/entrypoints/cli/main.py", line 56, in main\cf1\highlight2 
+\par \cf0\highlight0     args.dispatch_function(args)\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/entrypoints/cli/serve.py", line 42, in cmd\cf1\highlight2 
+\par \cf0\highlight0     uvloop.run(run_server(args))\cf1\highlight2 
+\par \cf0\highlight0   File "/usr/local/lib/python3.11/site-packages/uvloop/__init__.py", line 105, in run\cf1\highlight2 
+\par \cf0\highlight0     return runner.run(wrapper())\cf1\highlight2 
+\par \cf0\highlight0            ^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0   File "/usr/local/lib/python3.11/asyncio/runners.py", line 118, in run\cf1\highlight2 
+\par \cf0\highlight0     return self._loop.run_until_complete(task)\cf1\highlight2 
+\par \cf0\highlight0            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0   File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete\cf1\highlight2 
+\par \cf0\highlight0   File "/usr/local/lib/python3.11/site-packages/uvloop/__init__.py", line 61, in wrapper\cf1\highlight2 
+\par \cf0\highlight0     return await main\cf1\highlight2 
+\par \cf0\highlight0            ^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/entrypoints/openai/api_server.py", line 1405, in run_server\cf1\highlight2 
+\par \cf0\highlight0     async with build_async_engine_client(args) as engine_client:\cf1\highlight2 
+\par \cf0\highlight0   File "/usr/local/lib/python3.11/contextlib.py", line 210, in __aenter__\cf1\highlight2 
+\par \cf0\highlight0     return await anext(self.gen)\cf1\highlight2 
+\par \cf0\highlight0            ^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/entrypoints/openai/api_server.py", line 155, in build_async_engine_client\cf1\highlight2 
+\par \cf0\highlight0     async with build_async_engine_client_from_engine_args(\cf1\highlight2 
+\par \cf0\highlight0   File "/usr/local/lib/python3.11/contextlib.py", line 210, in __aenter__\cf1\highlight2 
+\par \cf0\highlight0     return await anext(self.gen)\cf1\highlight2 
+\par \cf0\highlight0            ^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/entrypoints/openai/api_server.py", line 187, in build_async_engine_client_from_engine_args\cf1\highlight2 
+\par \cf0\highlight0     async_llm = AsyncLLM.from_vllm_config(\cf1\highlight2 
+\par \cf0\highlight0                 ^^^^^^^^^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/v1/engine/async_llm.py", line 158, in from_vllm_config\cf1\highlight2 
+\par \cf0\highlight0     return cls(\cf1\highlight2 
+\par \cf0\highlight0            ^^^^\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/v1/engine/async_llm.py", line 117, in __init__\cf1\highlight2 
+\par \cf0\highlight0     self.engine_core = core_client_class(\cf1\highlight2 
+\par \cf0\highlight0                        ^^^^^^^^^^^^^^^^^^\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/v1/engine/core_client.py", line 781, in __init__\cf1\highlight2 
+\par \cf0\highlight0     super().__init__(\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/v1/engine/core_client.py", line 425, in __init__\cf1\highlight2 
+\par \cf0\highlight0     self._wait_for_engine_startup(output_address, parallel_config)\cf1\highlight2 
+\par \cf0\highlight0   File "/data/00943438/run_dir/omniinfer/infer_engines/vllm/vllm/v1/engine/core_client.py", line 494, in _wait_for_engine_startup\cf1\highlight2 
+\par \cf0\highlight0     raise RuntimeError("Engine core initialization failed. "\cf1\highlight2 
+\par \cf0\highlight0 RuntimeError: Engine core initialization failed. See root cause above. Failed core proc(s): \{'EngineCore_0': 1\}\cf1\highlight2 
+\par \cf0\highlight0 [ERROR] 2025-10-24-17:55:13 (PID:209044, Device:-1, RankID:-1) ERR99999 UNKNOWN applicaiton exception\cf1\highlight2 
 \par \pard\cf0\highlight0\f1 
 \par }
  
