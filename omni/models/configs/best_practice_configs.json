@@ -98,5 +98,15 @@
       "pd_disaggregation": true,
       "prefill_config_file": "pangu_ultra_moe_a3_prefill_w8a8_4p1d.json",
       "decode_config_file": "pangu_ultra_moe_a3_decode_w8a8_4p1d.json"
+   },
+   {
+      "model": "longcat-flash",
+      "hardware": "A3",
+      "precision": "bf16",
+      "prefill_nodes_num": 1,
+      "decode_nodes_num": 1,        
+      "pd_disaggregation": true,
+      "prefill_config_file": "longcat_prefill_bf16_1p1d.json",
+      "decode_config_file": "longcat_decode_bf16_1p1d.json"
    }
 ]
