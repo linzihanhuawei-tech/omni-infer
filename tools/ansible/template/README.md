@@ -182,12 +182,19 @@ ansible-playbook -i omni_infer_inventory.yml omni_infer_server.yml --tags clean_
 
 需要注意的是 **server_elastic.yml** 的使用方式与 **omni_infer_server_template.yml** 一致，都可以作为推理服务的完整启动脚本，继承 **omni_infer_server_template.yml** 脚本中的所有 tags 能力，而非仅作为弹性扩缩容脚本使用。
 
-### 第四步：执行命令
+### 第四步：执行添加节点命令
 请保障要启动服务的新节点上没有任何其他容器运行，否则可能会导致启动失败。
 ```bash
 ansible-playbook -i omni_infer_inventory_used_for_2P2D.yml omni_infer_server_template_elastic.yml --tags add_node
 ```
-执行以上命令后，可观察到实例中原有节点状态不会变化，新增节点上服务开始启动并加载权重。启动过程中，nginx会短暂断开重连，导致服务有几秒中断，正在推理的请求可能会失败。
+执行以上命令后，可观察到实例中原有节点状态不会变化，新增节点上服务开始启动并加载权重。
+
+### 第五步：重新建立proxy连接
+待观察到新增节点已完成拉起后，执行以下命令重启proxy服务。
+```bash
+ansible-playbook -i omni_infer_inventory_used_for_2P2D.yml omni_infer_server_template_elastic.yml --tags run_proxy
+```
+在这个过程中，nginx会短暂断开重连，导致服务有几秒中断，正在推理的请求可能会失败。
 
 启动后，由于当前的推理实例，和直接使用当前 **inventory.yml** 配置启动的服务并没有差异。如果需要修改代码或重启服务，可直接使用第四章提到的 `--tags run_server` 方法。
 
