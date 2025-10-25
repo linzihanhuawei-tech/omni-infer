@@ -108,7 +108,9 @@ class LongcatFlashTopkRouter(nn.Module):
     def get_topk_indices(self, classify_score):
         n_routed_experts = classify_score.shape[-1]
         scores = classify_score.softmax(dim=-1)
-        scores_for_choice = scores.view(-1, n_routed_experts) + self.e_score_correction_bias.unsqueeze(0)
+        scores_for_choice = scores.view(-1, n_routed_experts)
+        if self.e_score_correction_bias is not None:
+            scores_for_choice = scores_for_choice + self.e_score_correction_bias.unsqueeze(0)
         # TODO：npu_moe_gating_top_k算子有问题，只支持256和384专家。
         # return torch_npu.npu_moe_gating_top_k(
         #     router_logits.float(),
