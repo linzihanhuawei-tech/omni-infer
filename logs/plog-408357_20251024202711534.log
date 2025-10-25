@@ -1,0 +1,17 @@
+[ERROR] RUNTIME(412851,python):2025-10-24-20:27:11.528.372 [stars_engine.cc:1540]412851 ProcLogicCqReport:[INIT][DEFAULT]Task run failed, device_id=6, stream_id=2, task_id=20667, sqe_type=3(place holder), errType=0x20(sq sw status error), sqSwStatus=0x105
+[ERROR] RUNTIME(412851,python):2025-10-24-20:27:11.528.704 [device_error_proc.cc:1321]412851 PrintStreamTimeoutSnapshotInfo:[INIT][DEFAULT]stream_id=8, task_id=54713, taskType=66 (KERNEL_AIVEC).
+[ERROR] RUNTIME(412851,python):2025-10-24-20:27:11.529.156 [device_error_proc.cc:1415]412851 ProcessStarsWaitTimeoutErrorInfo:[INIT][DEFAULT]report error module_type=6, module_name=EE9999
+[ERROR] RUNTIME(412851,python):2025-10-24-20:27:11.529.163 [device_error_proc.cc:1415]412851 ProcessStarsWaitTimeoutErrorInfo:[INIT][DEFAULT]The error from device(chipId:3, dieId:0), serial number is 15, event wait timeout occurred during task execution, stream_id:2, sq_id:2, task_id:20667, event_id=1312, timeout=150s.
+[ERROR] RUNTIME(412851,python):2025-10-24-20:27:11.529.272 [stream.cc:3278]412851 EnterFailureAbort:[INIT][DEFAULT]stream_id=2 enter failure abort.
+[ERROR] RUNTIME(412851,python):2025-10-24-20:27:11.534.009 [event_task.cc:535]412851 DoCompleteSuccessForEventWaitTask:[INIT][DEFAULT]event wait error, retCode=0x105, [task timeout].
+[ERROR] RUNTIME(412851,python):2025-10-24-20:27:11.534.015 [stream.cc:1180]412851 GetError:[INIT][DEFAULT]Stream Synchronize failed, stream_id=2, retCode=0x105, [task timeout].
+[ERROR] RUNTIME(412851,python):2025-10-24-20:27:11.534.028 [event_task.cc:607]412851 PrintErrorInfoForEventWaitTask:[INIT][DEFAULT]Task execute failed, device_id=6, stream_id=2, task_id=20667, flip_num=12, task_type=3(EVENT_WAIT), event_flag=0x1. 
+[ERROR] RUNTIME(412851,python):2025-10-24-20:27:11.534.052 [stars_engine.cc:1410]412851 StarsResumeRtsq:[INIT][DEFAULT]stop scheduling in abort failure mode: stream_id=2, sq_id=2, sq_head=175, task_id=20667, taskType=3.
+[ERROR] RUNTIME(412851,python):2025-10-24-20:27:11.534.058 [stars_engine.cc:1155]412851 SyncTask:[INIT][DEFAULT]stream is in failure abort and need to reclaim all, device_id=6, stream_id=2.
+[ERROR] RUNTIME(412851,python):2025-10-24-20:27:11.534.071 [stream.cc:1180]412851 GetError:[INIT][DEFAULT]Stream Synchronize failed, stream_id=2, retCode=0x105, [task timeout].
+[ERROR] RUNTIME(412851,python):2025-10-24-20:27:11.534.074 [stream.cc:1183]412851 GetError:[INIT][DEFAULT]report error module_type=2, module_name=EI9999
+[ERROR] RUNTIME(412851,python):2025-10-24-20:27:11.534.076 [stream.cc:1183]412851 GetError:[INIT][DEFAULT]Task execute failed, device_id=6, stream_id=2, task_id=20667, flip_num=12, task_type=3(EVENT_WAIT), event_flag=0x1. 
+[ERROR] RUNTIME(412851,python):2025-10-24-20:27:11.534.111 [api_error.cc:973]412851 StreamSynchronize:[INIT][DEFAULT]Stream synchronize failed, stream_id=2, timeout=-1ms.
+[ERROR] RUNTIME(412851,python):2025-10-24-20:27:11.534.134 [api_c_stream.cc:173]412851 rtStreamSynchronizeWithTimeout:[INIT][DEFAULT]ErrCode=107020, desc=[task timeout], InnerCode=0x7150059
+[ERROR] RUNTIME(412851,python):2025-10-24-20:27:11.534.139 [error_message_manage.cc:53]412851 FuncErrorReason:[INIT][DEFAULT]report error module_type=3, module_name=EE8888
+[ERROR] RUNTIME(412851,python):2025-10-24-20:27:11.534.143 [error_message_manage.cc:53]412851 FuncErrorReason:[INIT][DEFAULT]rtStreamSynchronizeWithTimeout execute failed, reason=[task timeout]
